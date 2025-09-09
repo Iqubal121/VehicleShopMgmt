@@ -691,3 +691,322 @@ body, html, #root {
   color: #1e40af;
   text-decoration: underline;
 }
+
+/*Customer Section CSS*/
+.customer-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  color: #222;
+  background-color: #f9fafb;
+}
+
+.customer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.customer-icon {
+  font-size: 24px;
+  margin-right: 8px;
+}
+
+.back-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.customer-database {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 0 8px rgb(0 0 0 / 0.1);
+}
+
+.customer-database-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.customer-database-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.customer-database-header p {
+  color: #6b7280;
+  margin: 4px 0 0 0;
+  font-size: 14px;
+}
+
+.customer-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #1e40af;
+}
+
+.btn-success {
+  background-color: #16a34a;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #14532d;
+}
+
+.customer-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.input-search {
+  flex: 1 1 250px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.select-status {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.input-date {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 140px;
+}
+
+.btn-clear {
+  background-color: #6b7280;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.btn-clear:hover {
+  background-color: #4b5563;
+}
+
+.customer-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  padding: 16px 20px;
+  flex: 1 1 150px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 0 6px rgb(0 0 0 / 0.05);
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #6b7280;
+  flex: 2;
+}
+
+.stat-icon {
+  font-size: 28px;
+}
+
+.stat-card.total-customers {
+  background-color: #e0e7ff;
+}
+
+.stat-card.active-loans {
+  background-color: #dcfce7;
+}
+
+.stat-card.overdue-payments {
+  background-color: #fee2e2;
+}
+
+.stat-card.new-this-month {
+  background-color: #ede9fe;
+}
+
+.customer-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 8px rgb(0 0 0 / 0.1);
+}
+
+.customer-table th,
+.customer-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.customer-table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+.customer-table tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  display: inline-block;
+  min-width: 70px;
+  text-align: center;
+}
+
+.status-active {
+  background-color: #22c55e;
+}
+
+.status-closed {
+  background-color: #6b7280;
+}
+
+.status-overdue {
+  background-color: #ef4444;
+}
+
+.status-unknown {
+  background-color: #9ca3af;
+}
+
+.btn-action {
+  background-color: #2563eb;
+  color: white;
+  padding: 6px 12px;
+  margin-right: 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-action:hover {
+  background-color: #1e40af;
+}
+
+.btn-delete {
+  background-color: #ef4444;
+}
+
+.btn-delete:hover {
+  background-color: #b91c1c;
+}
+
+.no-data {
+  text-align: center;
+  color: #6b7280;
+  padding: 20px 0;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background-color: #e0e7ff;
+}
+
+.customer-detail-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.customer-detail-form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+}
+
+.customer-detail-form input,
+.customer-detail-form textarea,
+.customer-detail-form select {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.customer-detail-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c;
+}
+
