@@ -2,6 +2,13 @@ import React, { useEffect, useState } from "react";
 import Sidebar from './Sidebar.jsx';
 
 const Dashboard = () => {
+
+  const [totalLoan, setTotalLoan] = useState(null)
+  const[activeLoans, setActiveLoans] = useState(null)
+  const[overduePayments, setOverduePayments] = useState(null)
+  const[totalCollection,setTotalCollection] = useState(null)
+
+  
   const [metrics, setMetrics] = useState(null);
   const [monthlyCollection, setMonthlyCollection] = useState(null);
   const [loanStatus, setLoanStatus] = useState(null);
