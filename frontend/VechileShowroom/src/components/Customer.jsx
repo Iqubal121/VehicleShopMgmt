@@ -8,16 +8,16 @@ const Customer = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loanStatus, setLoanStatus] = useState('All Status');
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
-
   const navigate = useNavigate();
 
   const fetchCustomers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/customers');
+      const response = await fetch('/api/customers');
       if (!response.ok) {
         throw new Error('Failed to fetch customers');
       }
       const data = await response.json();
+      console.log('Fetched customers:', data);
       setCustomers(data);
       setFilteredCustomers(data);
     } catch (err) {
@@ -85,10 +85,50 @@ const Customer = () => {
       <header className="customer-header">
         <>
           <h1><span className="customer-icon">🔒</span> Customer Management</h1>
-          <button className="back-link" onClick={() => navigate('/')}>← Back to Dashboard</button>
+          <button className="btn btn-primary" onClick={() => navigate('/')}>← Back to Dashboard</button>
         </>
       </header>
+      <section className="metrics">
+          <div className="metric-card">
+            <div className="metric-info">
+              <div className="metric-label">Total Customers</div>
+              <div className="metric-value">{totalCustomers}</div>
+            </div>
+            <div className="metric-icon blue">👥</div>
+          </div>
 
+          <div className="metric-card">
+            <div className="metric-info">
+              <div className="metric-label">Active Loans</div>
+              <div className="metric-value">{activeLoans}</div>
+            </div>
+            <div className="metric-icon green">🟢</div>
+          </div>
+          
+          <div className="metric-card">
+            <div className="metric-info">
+              <div className="metric-label">Monthly Closed</div>
+              <div className="metric-value">{closedLoans}</div>
+            </div>
+            <div className="metric-icon purple">✅</div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-info">
+              <div className="metric-label">Overdue Payments</div>
+              <div className="metric-value">{overduePayments}</div>
+            </div>
+            <div className="metric-icon red">‼️</div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-info">
+              <div className="metric-label">Newly Added in this month</div>
+              <div className="metric-value">{newThisMonth}</div>
+            </div>
+            <div className="metric-icon green">🆕</div>
+          </div>
+        </section>
       <section className="customer-database">
         <div className="customer-database-header">
           <h2>Customer Database</h2>
@@ -132,72 +172,50 @@ const Customer = () => {
           <button className="btn btn-clear" onClick={clearFilters}>Clear</button>
         </div>
 
-        <div className="customer-stats">
-          <div className="stat-card total-customers">
-            <div className="stat-value">{totalCustomers}</div>
-            <div className="stat-label">Total Customers</div>
-            <div className="stat-icon">👥</div>
-          </div>
-          <div className="stat-card active-loans">
-            <div className="stat-value">{activeLoans}</div>
-            <div className="stat-label">Active Loans</div>
-            <div className="stat-icon">✔️</div>
-          </div>
-          <div className="stat-card overdue-payments">
-            <div className="stat-value">{overduePayments}</div>
-            <div className="stat-label">Overdue Payments</div>
-            <div className="stat-icon">❗</div>
-          </div>
-          <div className="stat-card closed-loans">
-            <div className="stat-value">{closedLoans}</div>
-            <div className="stat-label">Closed Loans</div>
-            <div className="stat-icon">✅</div>
-          </div>
-          <div className="stat-card new-this-month">
-            <div className="stat-value">{newThisMonth}</div>
-            <div className="stat-label">New This Month</div>
-            <div className="stat-icon">🆕</div>
-          </div>
-        </div>
-
-        <table className="customer-table">
+          <table className="customer-table">
           <thead>
             <tr>
-              <th>SL.NO</th>
-              <th>LOAN NO</th>
-              <th>CUSTOMER DETAILS</th>
-              <th>CONTACT INFO</th>
-              <th>LOAN DETAILS</th>
-              <th>STATUS</th>
-              <th>NEXT EMI DATE</th>
+              <th>Sl. Number</th>
+              <th>Customer ID</th>
+              <th>Customer Details</th>
+              <th>Contact Info</th>
+              <th>Loan Number</th>
+              <th>Loan Amount</th>
+              <th>Vehicle Number</th>
+              <th>Status</th>
+              <th>Next EMI Date</th>
             </tr>
           </thead>
           <tbody>
             {filteredCustomers.length === 0 ? (
               <tr>
-                <td colSpan="7" className="no-data">No customers found.</td>
+                <td colSpan="9" className="no-data">No customers found.</td>
               </tr>
             ) : (
               filteredCustomers.map((customer, index) => (
                 <tr key={customer.id || index} className="clickable-row" onClick={() => handleRowClick(customer)}>
                   <td>{index + 1}</td>
-                  <td>{customer.loanNumber || '-'}</td>
+                  <td>{customer.id || '-'}</td>
                   <td>
                     <div>{customer.name}</div>
-                    <div className="loan-details">{customer.loanDetails || ''}</div>
                   </td>
                   <td>
                     <div>{customer.mobile || '-'}</div>
-                    <div>{customer.email || '-'}</div>
-                  </td>
-                  <td>{customer.loanDetails || '-'}</td>
-                  <td>
-                    <span className={`status-badge status-${customer.loanStatus?.toLowerCase() || 'unknown'}`}>
-                      {customer.loanStatus || 'Unknown'}
-                    </span>
                   </td>
                   <td>
-                    {customer.nextEmiDate || '-'}
+                    <div>{customer.loanNumber || '-'}</div>
+                  </td>
+                  <td>
+                    <div>{customer.loanAmount || '-'}</div>
+                  </td>
+                  <td>
+                    <div>{customer.vehicleNumber || '-'}</div>
+                  </td>
+                  <td>
+                    <div>{customer.loanStatus || '-'}</div>
+                  </td>
+                  <td>
+                    <div>{customer.nextEmiDate || '-'}</div>
                   </td>
                 </tr>
               ))
@@ -205,7 +223,6 @@ const Customer = () => {
           </tbody>
         </table>
       </section>
-
     </div>
   );
 };

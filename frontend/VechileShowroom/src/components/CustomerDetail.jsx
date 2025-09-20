@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../index.css';
 
 const CustomerDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { id } = useParams();
   const customerFromState = location.state?.customer;
 
   const [customer, setCustomer] = useState({
@@ -12,7 +13,7 @@ const CustomerDetail = () => {
     date: '',
     name: '',
     fatherName: '',
-    mobileNo: '',
+    mobile: '',
     ckycNo: '',
     address: '',
     vehicleNumber: '',
@@ -24,7 +25,7 @@ const CustomerDetail = () => {
     regnNumber: '',
     exShowroomPrice: '',
     saleType: '',
-    loanNo: '',
+    loanAmount: '',
     sanctionAmount: '',
     totalAmount: '',
     downPayment: '',
@@ -35,11 +36,38 @@ const CustomerDetail = () => {
     emiSchedule: [],
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Fetch customer data from backend using ID
+  const fetchCustomerData = async (customerId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:5000/api/customers/${customerId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch customer data');
+      }
+      const data = await response.json();
+      setCustomer(data);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching customer:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    // If customer data is passed from state (from Customer.jsx), use it
     if (customerFromState) {
       setCustomer(customerFromState);
     }
-  }, [customerFromState]);
+    // Otherwise, fetch from backend using ID from URL
+    else if (id) {
+      fetchCustomerData(id);
+    }
+  }, [customerFromState, id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,13 +82,59 @@ const CustomerDetail = () => {
     alert('Delete functionality not implemented yet.');
   };
 
-  if (!customerFromState) {
+  // Show loading state
+  if (loading) {
     return (
       <div className="customer-container">
-        <p>No customer data available.</p>
-        <button className="btn btn-primary" onClick={() => navigate('/customers')}>
-          Back to Customers
-        </button>
+        <header className="customer-header">
+          <h1><span className="customer-icon">🔒</span> Customer Detail</h1>
+          <button className="btn btn-primary" onClick={() => navigate('/customers')}>
+            ← Back to Customers
+          </button>
+        </header>
+        <div className="loading-container">
+          <p>Loading customer data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="customer-container">
+        <header className="customer-header">
+          <h1><span className="customer-icon">🔒</span> Customer Detail</h1>
+          <button className="btn btn-primary" onClick={() => navigate('/customers')}>
+            ← Back to Customers
+          </button>
+        </header>
+        <div className="error-container">
+          <p>Error: {error}</p>
+          <button className="btn btn-primary" onClick={() => navigate('/customers')}>
+            Back to Customers
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show no data state
+  if (!customer.id && !loading) {
+    return (
+      <div className="customer-container">
+        <header className="customer-header">
+          <h1><span className="customer-icon">🔒</span> Customer Detail</h1>
+          <button className="btn btn-primary" onClick={() => navigate('/customers')}>
+            ← Back to Customers
+          </button>
+        </header>
+        <div className="no-data-container">
+          <p>No customer data available.</p>
+          <button className="btn btn-primary" onClick={() => navigate('/customers')}>
+            Back to Customers
+          </button>
+        </div>
       </div>
     );
   }
@@ -93,7 +167,7 @@ const CustomerDetail = () => {
         </label>
         <label>
           Mobile No:
-          <input type="text" name="mobileNo" value={customer.mobileNo} onChange={handleChange} />
+          <input type="text" name="mobileNo" value={customer.mobile} onChange={handleChange} />
         </label>
         <label>
           CKYC No:
@@ -141,19 +215,19 @@ const CustomerDetail = () => {
         </label>
         <label>
           Loan No:
-          <input type="text" name="loanNo" value={customer.loanNo} onChange={handleChange} />
+          <input type="text" name="loanNo" value={customer.loanNumber} onChange={handleChange} />
         </label>
         <label>
           Sanction Amount:
           <input type="number" name="sanctionAmount" value={customer.sanctionAmount} onChange={handleChange} />
         </label>
         <label>
-          Total Amount:
-          <input type="number" name="totalAmount" value={customer.totalAmount} onChange={handleChange} />
-        </label>
-        <label>
           Down Payment:
           <input type="number" name="downPayment" value={customer.downPayment} onChange={handleChange} />
+        </label>
+        <label>
+          Loan Amount:
+          <input type="number" name="totalAmount" value={customer.loanAmount} onChange={handleChange} />
         </label>
         <label>
           Tenure:
