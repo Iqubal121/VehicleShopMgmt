@@ -63,7 +63,7 @@ body, html, #root {
   gap: 1rem;
 }
 
-.nav-links a {
+.nav-links a, .nav-links .button-link {
   color: black;
   text-decoration: none;
   font-size: 0.9rem;
@@ -73,10 +73,15 @@ body, html, #root {
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   transition: background-color 0.3s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
 }
 
 .nav-links a:hover,
-.nav-links a.active {
+.nav-links a.active,
+.nav-links .button-link:hover {
   background-color: #f3f4f6;
 }
 
@@ -298,15 +303,6 @@ body, html, #root {
   transform: translateY(-2px);
 }
 
-.bar-value {
-  position: absolute;
-  top: -1.5rem;
-  color: #1f2937;
-  font-size: 0.65rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 .bar-label {
   position: absolute;
   bottom: -1.8rem;
@@ -471,213 +467,32 @@ body, html, #root {
     font-size: 0.7rem;
   }
 }
+
 /* Modal styles */
-/* Summary cards styles */
-.summary-cards {
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 2rem;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.card {
+.modal-content {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
-  padding: 1rem;
-  flex: 1;
-  min-width: 200px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.card div:first-child {
-  font-size: 0.9rem;
-  color: #6b7280;
-}
-
-.card .value {
-  font-size: 1.8rem;
-  font-weight: 700;
-}
-
-/* Title section styles */
-.title-section {
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  gap: 1rem;
-}
-
-.title-section h2 {
-  margin-bottom: 0;
-}
-
-.title-section p {
-  margin-bottom: 0;
-  color: #6b7280;
-  font-size: 1rem;
-  font-weight: 400;
-  flex-grow: 1;
-  margin-left: 0.5rem;
-}
-
-.title-section .buttons {
-  margin-top: 0;
-  gap: 0.75rem;
-}
-
-.title-section .btn-primary {
-  padding: 0.5rem 1.5rem;
-  font-weight: 600;
-  font-size: 1rem;
   border-radius: 8px;
-  background-color: #2563eb;
-  color: white;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
-  transition: background-color 0.3s ease;
+  padding: 20px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
-.title-section .btn-primary:hover {
-  background-color: #1e40af;
-}
-
-.title-section .btn-success {
-  padding: 0.5rem 1.5rem;
-  font-weight: 600;
-  font-size: 1rem;
-  border-radius: 8px;
-  background-color: #16a34a;
-  color: white;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
-  transition: background-color 0.3s ease;
-}
-
-.title-section .btn-success:hover {
-  background-color: #15803d;
-}
-
-.title-section h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 0.25rem;
-}
-
-.title-section p {
-  font-size: 1rem;
-  color: #555;
-  margin: 0;
-  margin-left: 0.5rem;
-  flex-grow: 1;
-}
-
-/* Buttons container */
-.title-section .buttons {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0;
-}
-
-.title-section .btn {
-  padding: 0.5rem 1.25rem;
-  font-size: 1rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
-}
-
-.title-section .btn-primary {
-  background-color: #2563eb;
-  color: white;
-}
-
-.title-section .btn-primary:hover {
-  background-color: #1e40af;
-}
-
-.title-section .btn-success {
-  background-color: #16a34a;
-  color: white;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
-}
-
-.title-section .btn-success:hover {
-  background-color: #15803d;
-}
-
-/* Filters styles */
-.filters {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.filters input[type="text"],
-.filters select,
-.filters input[type="date"] {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-  min-width: 150px;
-}
-
-.filters button.btn-clear {
-  background-color: #ef4444;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-}
-
-.filters button.btn-clear:hover {
-  background-color: #b91c1c;
-}
-
-/* Back link styles */
-.back-link {
-  display: inline-block;
-  margin-bottom: 1rem;
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.back-link:hover {
-  color: #2563eb;
-}
-
-/* Additional styles for Back to Dashboard link */
-.back-link {
-  font-size: 1rem;
-  font-weight: 600;
-  text-decoration: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.back-link:hover {
-  background-color: #e0e7ff;
-  color: #1e40af;
-  text-decoration: underline;
-}
-
-/*Customer Section CSS*/
+/* Customer Section CSS */
 .customer-container {
   padding: 20px;
   font-family: Arial, sans-serif;
@@ -812,64 +627,6 @@ body, html, #root {
   background-color: #4b5563;
 }
 
-.customer-stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.stat-card {
-  background-color: #f3f4f6;
-  border-radius: 20px;
-  padding: 16px 20px;
-  flex: 1 1 180px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 0 6px rgb(0 0 0 / 0.05);
-  justify-content: center;
-  flex-direction: column;
-  text-align: center;
-  min-width: 180px;
-  max-width: 180px;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  flex: 1;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #6b7280;
-  flex: 2;
-}
-
-.stat-icon {
-  font-size: 28px;
-}
-
-.stat-card.total-customers {
-  background-color: #e0e7ff;
-}
-
-.stat-card.active-loans {
-  background-color: #dcfce7;
-}
-
-.stat-card.overdue-payments {
-  background-color: #fee2e2;
-}
-.stat-card.closed-loans {
-  background-color: #ede9fe;
-}
-
-.stat-card.new-this-month {
-  background-color: #ede9fe;
-}
-
 .customer-table {
   width: 100%;
   border-collapse: collapse;
@@ -895,49 +652,6 @@ body, html, #root {
 
 .customer-table tbody tr:hover {
   background-color: #f3f4f6;
-}
-
-.status-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: white;
-  display: inline-block;
-  min-width: 70px;
-  text-align: center;
-}
-
-.status-active {
-  background-color: #22c55e;
-}
-
-.status-closed {
-  background-color: #6b7280;
-}
-
-.status-overdue {
-  background-color: #ef4444;
-}
-
-.status-unknown {
-  background-color: #9ca3af;
-}
-
-.btn-action {
-  background-color: #2563eb;
-  color: white;
-  padding: 6px 12px;
-  margin-right: 6px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-}
-
-.btn-action:hover {
-  background-color: #1e40af;
 }
 
 .btn-delete {
@@ -994,13 +708,12 @@ body, html, #root {
   gap: 12px;
 }
 
-.btn-danger {
-  background-color: #ef4444;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #b91c1c;
+/* Error message styling */
+.error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
 }
 
 /* Multi-Step Form Styles */
@@ -1231,52 +944,6 @@ body, html, #root {
   border: 1px solid #e5e7eb;
 }
 
-/* Loan Status Cards */
-.loan-status-card {
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.loan-status-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
-}
-
-.active-loans {
-  background: linear-gradient(135deg, #fef3c7, #fbbf24);
-  color: #92400e;
-}
-
-.overdue-payments {
-  background: linear-gradient(135deg, #fecaca, #ef4444);
-  color: #7f1d1d;
-}
-
-.closed-loans {
-  background: linear-gradient(135deg, #d1fae5, #10b981);
-  color: #064e3b;
-}
-
-.loan-status-card .metric-icon.yellow {
-  background-color: #f59e0b;
-  color: white;
-}
-
-.loan-status-card .metric-icon.red {
-  background-color: #ef4444;
-  color: white;
-}
-
-.loan-status-card .metric-icon.green {
-  background-color: #10b981;
-  color: white;
-}
-
 /* Recent Payments Section */
 .recent-payments-section {
   background: white;
@@ -1401,6 +1068,31 @@ body, html, #root {
   color: #b91c1c;
 }
 
+/* Vehicle Status Badge Styles */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+.status-badge.in-stock {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.sold {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.unknown {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
 /* Responsive for multi-step form */
 @media (max-width: 768px) {
   .multi-step-form-container {
@@ -1426,4 +1118,3 @@ body, html, #root {
     width: 100%;
   }
 }
-

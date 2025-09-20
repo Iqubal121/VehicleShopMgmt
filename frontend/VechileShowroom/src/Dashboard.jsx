@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from './Sidebar.jsx';
 
-const Dashboard = () => {
+const Dashboard = ({ openEMIDialog }) => {
   const [metrics, setMetrics] = useState(null);
   const [monthlyCollection, setMonthlyCollection] = useState(null);
   const [loanStatus, setLoanStatus] = useState(null);
@@ -37,7 +37,7 @@ const Dashboard = () => {
 
   return (
     <div className={`dashboard-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <Sidebar />
+      <Sidebar openEMIDialog={openEMIDialog} />
 
       <main className="main-content">
         <header className="header">

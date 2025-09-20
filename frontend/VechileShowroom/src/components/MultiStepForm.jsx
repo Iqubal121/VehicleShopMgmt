@@ -18,18 +18,21 @@ const MultiStepForm = () => {
     engineNumber: '',
     make: '',
     model: '',
-    year: '',
     chassisNumber: '',
     regnNumber: '',
     exShowroomPrice: '',
-    // Sales
-    saleType: 'Cash',
-    loanNo: '',
-    sanctionAmount: '',
-    totalAmount: '',
-    downPayment: '',
-    tenure: '',
+    // Sales - Cash fields
     saleDate: '',
+    totalAmount: '',
+    paidAmount: '',
+    remainingAmount: '',
+    lastPaymentDate: '',
+    // Sales - Finance fields
+    loanNumber: '',
+    downPayment: '',
+    loanAmount: '',
+    tenure: '',
+    interestRate: '',
     firstEmiDate: '',
     emiAmount: '',
     emiSchedule: []
@@ -41,15 +44,40 @@ const MultiStepForm = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    // Auto-calculate EMI if relevant fields change
-    if (['totalAmount', 'downPayment', 'tenure'].includes(name)) {
-      const total = parseFloat(formData.totalAmount || 0);
-      const down = parseFloat(formData.downPayment || 0);
-      const tenure = parseInt(formData.tenure || 0);
-      if (total > down && tenure > 0) {
-        const emi = ((total - down) / tenure).toFixed(2);
-        setFormData(prev => ({ ...prev, emiAmount: emi }));
+    // Auto-calculate EMI if relevant fields change (only for Finance)
+    if (['totalAmount', 'downPayment', 'tenure', 'interestRate'].includes(name)) {
+      const totalAmount = parseFloat(name === 'totalAmount' ? value : formData.totalAmount) || 0;
+      const downPayment = parseFloat(name === 'downPayment' ? value : formData.downPayment) || 0;
+      const tenure = parseInt(name === 'tenure' ? value : formData.tenure) || 0;
+      const interestRate = parseFloat(name === 'interestRate' ? value : formData.interestRate) || 0;
+
+      // Calculate loan amount (Total Amount - Down Payment)
+      const loanAmount = totalAmount - downPayment;
+
+      if (loanAmount > 0 && tenure > 0 && interestRate > 0) {
+        const monthlyRate = interestRate / 12 / 100;
+        const months = tenure;
+        const emi = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+        setFormData(prev => ({
+          ...prev,
+          loanAmount: loanAmount.toString(),
+          emiAmount: emi.toFixed(2)
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          loanAmount: loanAmount.toString(),
+          emiAmount: ''
+        }));
       }
+    }
+
+    // Auto-calculate remaining amount for Cash sales
+    if (['totalAmount', 'paidAmount'].includes(name)) {
+      const totalAmount = parseFloat(name === 'totalAmount' ? value : formData.totalAmount) || 0;
+      const paidAmount = parseFloat(name === 'paidAmount' ? value : formData.paidAmount) || 0;
+      const remainingAmount = totalAmount - paidAmount;
+      setFormData(prev => ({ ...prev, remainingAmount: remainingAmount.toString() }));
     }
   };
 
@@ -153,16 +181,12 @@ const MultiStepForm = () => {
               <input type="text" name="engineNumber" value={formData.engineNumber} onChange={handleChange} required />
             </div>
             <div className="form-row">
-              <label>Make:</label>
+              <label>Make(Year):</label>
               <input type="text" name="make" value={formData.make} onChange={handleChange} required />
             </div>
             <div className="form-row">
               <label>Model:</label>
               <input type="text" name="model" value={formData.model} onChange={handleChange} required />
-            </div>
-            <div className="form-row">
-              <label>Year:</label>
-              <input type="number" name="year" value={formData.year} onChange={handleChange} required />
             </div>
             <div className="form-row">
               <label>Chassis Number:</label>
@@ -182,45 +206,101 @@ const MultiStepForm = () => {
         return (
           <div className="form-step">
             <h3>Sales Details</h3>
+
+            {/* Sale Type Radio Buttons */}
             <div className="form-row">
               <label>Sale Type:</label>
-              <select name="saleType" value={formData.saleType} onChange={handleChange}>
-                <option value="Cash">Cash</option>
-                <option value="Finance">Finance</option>
-              </select>
+              <div className="radio-group">
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="saleType"
+                    value="Cash"
+                    checked={formData.saleType === 'Cash'}
+                    onChange={handleChange}
+                  />
+                  Cash
+                </label>
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="saleType"
+                    value="Finance"
+                    checked={formData.saleType === 'Finance'}
+                    onChange={handleChange}
+                  />
+                  Finance
+                </label>
+              </div>
             </div>
-            <div className="form-row">
-              <label>Loan No:</label>
-              <input type="text" name="loanNo" value={formData.loanNo} onChange={handleChange} />
-            </div>
-            <div className="form-row">
-              <label>Sanction Amount:</label>
-              <input type="number" name="sanctionAmount" value={formData.sanctionAmount} onChange={handleChange} />
-            </div>
-            <div className="form-row">
-              <label>Total Amount:</label>
-              <input type="number" name="totalAmount" value={formData.totalAmount} onChange={handleChange} required />
-            </div>
-            <div className="form-row">
-              <label>Down Payment:</label>
-              <input type="number" name="downPayment" value={formData.downPayment} onChange={handleChange} />
-            </div>
-            <div className="form-row">
-              <label>Tenure (months):</label>
-              <input type="number" name="tenure" value={formData.tenure} onChange={handleChange} />
-            </div>
-            <div className="form-row">
-              <label>Sale Date:</label>
-              <input type="date" name="saleDate" value={formData.saleDate} onChange={handleChange} required />
-            </div>
-            <div className="form-row">
-              <label>First EMI Date:</label>
-              <input type="date" name="firstEmiDate" value={formData.firstEmiDate} onChange={handleChange} />
-            </div>
-            <div className="form-row">
-              <label>EMI Amount:</label>
-              <input type="number" name="emiAmount" value={formData.emiAmount} readOnly />
-            </div>
+
+            {/* Cash Sale Fields */}
+            {formData.saleType === 'Cash' && (
+              <>
+                <div className="form-row">
+                  <label>Sale Date:</label>
+                  <input type="date" name="saleDate" value={formData.saleDate} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>Total Amount:</label>
+                  <input type="number" name="totalAmount" value={formData.totalAmount} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>Paid Amount:</label>
+                  <input type="number" name="paidAmount" value={formData.paidAmount} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>Remaining Amount:</label>
+                  <input type="number" name="remainingAmount" value={formData.remainingAmount} readOnly />
+                </div>
+                <div className="form-row">
+                  <label>Last Payment Date:</label>
+                  <input type="date" name="lastPaymentDate" value={formData.lastPaymentDate} onChange={handleChange} required />
+                </div>
+              </>
+            )}
+
+            {/* Finance Sale Fields */}
+            {formData.saleType === 'Finance' && (
+              <>
+                <div className="form-row">
+                  <label>Loan Number:</label>
+                  <input type="text" name="loanNumber" value={formData.loanNumber} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>Total Amount:</label>
+                  <input type="number" name="totalAmount" value={formData.totalAmount} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>Down Payment:</label>
+                  <input type="number" name="downPayment" value={formData.downPayment} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>Loan Amount:</label>
+                  <input type="number" name="loanAmount" value={formData.loanAmount} readOnly />
+                </div>
+                <div className="form-row">
+                  <label>Tenure (months):</label>
+                  <input type="number" name="tenure" value={formData.tenure} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>Interest Rate (%):</label>
+                  <input type="number" name="interestRate" value={formData.interestRate} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>Sale Date:</label>
+                  <input type="date" name="saleDate" value={formData.saleDate} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>First EMI Date:</label>
+                  <input type="date" name="firstEmiDate" value={formData.firstEmiDate} onChange={handleChange} required />
+                </div>
+                <div className="form-row">
+                  <label>EMI Amount:</label>
+                  <input type="number" name="emiAmount" value={formData.emiAmount} readOnly />
+                </div>
+              </>
+            )}
           </div>
         );
       case 3:
@@ -243,7 +323,6 @@ const MultiStepForm = () => {
               <p><strong>Engine Number:</strong> {formData.engineNumber}</p>
               <p><strong>Make:</strong> {formData.make}</p>
               <p><strong>Model:</strong> {formData.model}</p>
-              <p><strong>Year:</strong> {formData.year}</p>
               <p><strong>Chassis Number:</strong> {formData.chassisNumber}</p>
               <p><strong>Regn Number:</strong> {formData.regnNumber}</p>
               <p><strong>Ex-showroom Price:</strong> {formData.exShowroomPrice}</p>
@@ -251,20 +330,38 @@ const MultiStepForm = () => {
             <div className="preview-section">
               <h4>Sales Details</h4>
               <p><strong>Sale Type:</strong> {formData.saleType}</p>
-              <p><strong>Loan No:</strong> {formData.loanNo}</p>
-              <p><strong>Sanction Amount:</strong> {formData.sanctionAmount}</p>
-              <p><strong>Total Amount:</strong> {formData.totalAmount}</p>
-              <p><strong>Down Payment:</strong> {formData.downPayment}</p>
-              <p><strong>Tenure:</strong> {formData.tenure}</p>
-              <p><strong>Sale Date:</strong> {formData.saleDate}</p>
-              <p><strong>First EMI Date:</strong> {formData.firstEmiDate}</p>
-              <p><strong>EMI Amount:</strong> {formData.emiAmount}</p>
-              <h5>EMI Schedule</h5>
-              <ul>
-                {formData.emiSchedule.map((emi, index) => (
-                  <li key={index}>{emi.date}: {emi.amount}</li>
-                ))}
-              </ul>
+
+              {/* Cash Sale Preview */}
+              {formData.saleType === 'Cash' && (
+                <>
+                  <p><strong>Sale Date:</strong> {formData.saleDate}</p>
+                  <p><strong>Total Amount:</strong> {formData.totalAmount}</p>
+                  <p><strong>Paid Amount:</strong> {formData.paidAmount}</p>
+                  <p><strong>Remaining Amount:</strong> {formData.remainingAmount}</p>
+                  <p><strong>Last Payment Date:</strong> {formData.lastPaymentDate}</p>
+                </>
+              )}
+
+              {/* Finance Sale Preview */}
+              {formData.saleType === 'Finance' && (
+                <>
+                  <p><strong>Loan Number:</strong> {formData.loanNumber}</p>
+                  <p><strong>Total Amount:</strong> {formData.totalAmount}</p>
+                  <p><strong>Down Payment:</strong> {formData.downPayment}</p>
+                  <p><strong>Loan Amount:</strong> {formData.loanAmount}</p>
+                  <p><strong>Tenure:</strong> {formData.tenure}</p>
+                  <p><strong>Interest Rate:</strong> {formData.interestRate}</p>
+                  <p><strong>Sale Date:</strong> {formData.saleDate}</p>
+                  <p><strong>First EMI Date:</strong> {formData.firstEmiDate}</p>
+                  <p><strong>EMI Amount:</strong> {formData.emiAmount}</p>
+                  <h5>EMI Schedule</h5>
+                  <ul>
+                    {formData.emiSchedule.map((emi, index) => (
+                      <li key={index}>{emi.date}: {emi.amount}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
           </div>
         );
@@ -291,7 +388,7 @@ const MultiStepForm = () => {
         {renderStepContent()}
         <div className="form-actions">
           {currentStep > 0 && <button type="button" className="btn btn-secondary" onClick={prevStep}>Back</button>}
-          {currentStep < steps.length - 1 && <button type="button" className="btn btn-primary" onClick={nextStep}>Next</button>}
+          {currentStep < steps.length - 2 && <button type="button" className="btn btn-primary" onClick={nextStep}>Next</button>}
           {currentStep === steps.length - 2 && <button type="button" className="btn btn-primary" onClick={nextStep}>Preview</button>}
           {currentStep === steps.length - 1 && <button type="button" className="btn btn-success" onClick={handleSubmit}>Submit</button>}
         </div>
