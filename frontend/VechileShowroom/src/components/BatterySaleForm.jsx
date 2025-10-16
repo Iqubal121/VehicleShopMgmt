@@ -14,25 +14,24 @@ const BatterySaleForm = () => {
     totalAmount: '',
     paidAmount: '',
     remainingAmount: '',
-    warrantyStartDate: new Date().toISOString().split('T')[0],
-    notes: ''
+    warrantyStartDate: new Date().toISOString().split('T')[0]
   });
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    // Fetch available batteries (In Stock only)
-    const fetchBatteries = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/batteries');
-        if (response.ok) {
-          const data = await response.json();
-          const inStockBatteries = data.filter(b => b.status === 'In Stock');
-          setBatteries(inStockBatteries);
-        }
-      } catch (error) {
-        console.error('Error fetching batteries:', error);
+  const fetchBatteries = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/batteries');
+      if (response.ok) {
+        const data = await response.json();
+        const inStockBatteries = data.filter(b => b.status === 'In Stock');
+        setBatteries(inStockBatteries);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching batteries:', error);
+    }
+  };
+
+  useEffect(() => {
     fetchBatteries();
   }, []);
 
@@ -53,10 +52,7 @@ const BatterySaleForm = () => {
       setFormData(prev => ({ ...prev, remainingAmount: remaining.toString() }));
     }
 
-    // Update warranty start date when sale date changes
-    if (name === 'saleDate') {
-      setFormData(prev => ({ ...prev, warrantyStartDate: value }));
-    }
+
   };
 
   const addBattery = () => {
@@ -109,60 +105,38 @@ const BatterySaleForm = () => {
     }
 
     try {
-      // Create separate sale records for each battery
-      const salePromises = formData.batteries.map(battery =>
-        fetch('http://localhost:5000/api/battery-sales', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            customerName: formData.customerName,
-            customerMobile: formData.customerMobile,
-            customerAddress: formData.customerAddress,
-            serialNumber: battery.serialNumber,
-            saleDate: formData.saleDate,
-            totalAmount: battery.price,
-            paidAmount: (battery.price / formData.totalAmount) * formData.paidAmount,
-            remainingAmount: (battery.price / formData.totalAmount) * formData.remainingAmount,
-            warrantyMonths: battery.warrantyMonths,
-            warrantyStartDate: formData.warrantyStartDate
-          })
-        })
-      );
+      // Prepare data in the format expected by backend
+      const saleData = {
+        serialNumber: formData.batteries.map(b => b.serialNumber),
+        batteries: formData.batteries,
+        customerName: formData.customerName,
+        customerMobile: formData.customerMobile,
+        customerAddress: formData.customerAddress,
+        saleDate: formData.saleDate,
+        totalAmount: parseFloat(formData.totalAmount),
+        paidAmount: parseFloat(formData.paidAmount),
+        remainingAmount: parseFloat(formData.remainingAmount),
+        warrantyStartDate: formData.warrantyStartDate
+      };
 
-      const saleResponses = await Promise.all(salePromises);
-      const allSalesOk = saleResponses.every(res => res.ok);
+      const response = await fetch('http://localhost:5000/api/battery-sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saleData)
+      });
 
-      if (!allSalesOk) {
-        throw new Error('Failed to create some sales');
+      if (!response.ok) {
+        throw new Error('Failed to create sale');
       }
 
-      const saleDataArray = await Promise.all(saleResponses.map(res => res.json()));
-      const saleData = saleDataArray[0]; // Use first sale for navigation
+      const createdSale = await response.json();
 
-      // Update battery statuses to Sold and set saleDate
-      const updatePromises = formData.batteries.map(battery =>
-        fetch(`http://localhost:5000/api/batteries/${battery.serialNumber}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...battery,
-            status: 'Sold',
-            saleDate: formData.saleDate
-          })
-        })
-      );
+      // Refresh batteries list after sale
+      await fetchBatteries();
 
-      const updateResults = await Promise.all(updatePromises);
-      const allUpdated = updateResults.every(res => res.ok);
-
-      if (allUpdated) {
-        alert('Batteries sold successfully! Invoice generated.');
-        // Navigate to invoice
-        navigate(`/battery-invoice/${saleData.id}`);
-      } else {
-        alert('Sale created but failed to update some battery statuses');
-        navigate('/batteries');
-      }
+      alert('Batteries sold successfully! Invoice generated.');
+      // Navigate to invoice
+      navigate(`/battery-invoice/${createdSale.id}`);
     } catch (error) {
       console.error('Error:', error);
       alert('Error creating sale');

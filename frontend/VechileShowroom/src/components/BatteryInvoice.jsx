@@ -16,15 +16,49 @@ const BatteryInvoice = () => {
     return date.toLocaleDateString();
   };
 
+  const getMaxWarrantyMonths = (batteries) => {
+    if (!batteries || batteries.length === 0) return 0;
+    return Math.max(...batteries.map(b => parseInt(b.warrantyMonths) || 0));
+  };
+
   useEffect(() => {
-    const fetchSale = async () => {
+    const fetchSaleAndBatteries = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/battery-sales/${id}`);
-        if (!response.ok) {
+        // First fetch the sale record to get serial numbers
+        const saleResponse = await fetch(`http://localhost:5000/api/battery-sales/${id}`);
+        if (!saleResponse.ok) {
           throw new Error('Failed to fetch sale details');
         }
-        const data = await response.json();
-        setSale(data);
+        const saleData = await saleResponse.json();
+
+        // Then fetch battery details from batteries table using serial numbers
+        const serialNumbers = saleData.serialNumber || [];
+        if (serialNumbers.length > 0) {
+          const batteriesPromises = serialNumbers.map(serial =>
+            fetch(`http://localhost:5000/api/batteries/${serial}`)
+          );
+          const batteriesResponses = await Promise.all(batteriesPromises);
+
+          const batteriesData = await Promise.all(
+            batteriesResponses.map(async (response, index) => {
+              if (response.ok) {
+                return await response.json();
+              } else {
+                console.warn(`Failed to fetch battery ${serialNumbers[index]}`);
+                return null;
+              }
+            })
+          );
+
+          // Filter out null responses and combine with sale data
+          const validBatteries = batteriesData.filter(b => b !== null);
+          setSale({
+            ...saleData,
+            batteries: validBatteries
+          });
+        } else {
+          setSale(saleData);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -32,7 +66,7 @@ const BatteryInvoice = () => {
       }
     };
 
-    fetchSale();
+    fetchSaleAndBatteries();
   }, [id]);
 
   const handlePrint = () => {
@@ -97,10 +131,10 @@ const BatteryInvoice = () => {
           <div className="invoice-section">
             <h3>Sale Details</h3>
             <p><strong>Sale Date:</strong> {new Date(sale.saleDate).toLocaleDateString()}</p>
-            <p><strong>Invoice Date:</strong> {new Date(sale.createdAt).toLocaleDateString()}</p>
-            <p><strong>Warranty Months:</strong> {sale.warrantyMonths || 'N/A'}</p>
+            <p><strong>Invoice Date:</strong> {sale.saleDate ? new Date(sale.saleDate).toLocaleDateString() : 'N/A'}</p>
+            <p><strong>Warranty Months:</strong> {getMaxWarrantyMonths(sale.batteries)}</p>
             <p><strong>Warranty Start Date:</strong> {sale.warrantyStartDate ? new Date(sale.warrantyStartDate).toLocaleDateString() : 'N/A'}</p>
-            <p><strong>Warranty End Date:</strong> {calculateWarrantyEndDate(sale.warrantyStartDate, sale.warrantyMonths)}</p>
+            <p><strong>Warranty End Date:</strong> {calculateWarrantyEndDate(sale.warrantyStartDate, getMaxWarrantyMonths(sale.batteries))}</p>
           </div>
         </div>
 
@@ -119,7 +153,7 @@ const BatteryInvoice = () => {
             </thead>
             <tbody>
               {sale.batteries.map((battery, index) => (
-                <tr key={battery.id}>
+                <tr key={battery.serialNumber || index}>
                   <td>{index + 1}</td>
                   <td>{battery.serialNumber}</td>
                   <td>{battery.batteryName}</td>
@@ -135,24 +169,17 @@ const BatteryInvoice = () => {
         <div className="invoice-summary">
           <div className="summary-row">
             <span>Total Amount:</span>
-            <span>₹{sale.totalAmount}</span>
+            <span>₹{sale.totalAmount || 0}</span>
           </div>
           <div className="summary-row">
             <span>Paid Amount:</span>
-            <span>₹{sale.paidAmount}</span>
+            <span>₹{sale.paidAmount || 0}</span>
           </div>
           <div className="summary-row">
             <span>Remaining Amount:</span>
-            <span>₹{sale.remainingAmount}</span>
+            <span>₹{sale.remainingAmount || 0}</span>
           </div>
         </div>
-
-        {sale.notes && (
-          <div className="invoice-notes">
-            <h3>Notes</h3>
-            <p>{sale.notes}</p>
-          </div>
-        )}
 
         <div className="invoice-footer">
           <p>Thank you for your business!</p>

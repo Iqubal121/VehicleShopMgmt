@@ -4,6 +4,7 @@ import '../index.css';
 
 const Battery = () => {
   const [batteries, setBatteries] = useState([]);
+  const [sales, setSales] = useState([]);
   const [filteredBatteries, setFilteredBatteries] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
@@ -40,8 +41,23 @@ const Battery = () => {
     }
   };
 
+  const fetchSales = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/battery-sales');
+      if (!response.ok) {
+        throw new Error('Failed to fetch sales');
+      }
+      const data = await response.json();
+      console.log('Fetched sales:', data);
+      setSales(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchBatteries();
+    fetchSales();
   }, []);
 
   useEffect(() => {
@@ -128,7 +144,6 @@ const Battery = () => {
         setShowForm(false);
         setEditingBattery(null);
         setFormData({
-          id: '',
           serialNumber: '',
           batteryName: '',
           batteryType: '',
@@ -156,7 +171,6 @@ const Battery = () => {
   const handleEdit = (battery) => {
     setEditingBattery(battery);
     setFormData({
-      id: battery.id || '',
       serialNumber: battery.serialNumber || '',
       batteryName: battery.batteryName || '',
       batteryType: battery.batteryType || '',
@@ -192,7 +206,6 @@ const Battery = () => {
     setShowForm(false);
     setEditingBattery(null);
     setFormData({
-      id: '',
       serialNumber: '',
       batteryName: '',
       batteryType: '',
@@ -204,15 +217,18 @@ const Battery = () => {
     setErrors({});
   };
 
-  // Stats calculations
-  const totalBatteries = batteries.length;
-  const monthlySales = batteries.filter(b => {
-    if (!b.saleDate) return false;
-    const date = new Date(b.saleDate);
+  // Stats calculations based on sales data
+  const totalAvailableBatteries = filteredBatteries.filter(b => b.status === 'In Stock').length;
+  const yearlySales = sales.filter(s => {
+    const date = new Date(s.saleDate);
     const now = new Date();
-    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    return date.getFullYear() === now.getFullYear();
   }).length;
-  const outOfStocks = batteries.filter(b => b.status === 'Out of Stock').length;
+  const totalYearlySaleAmount = sales.filter(s => {
+    const date = new Date(s.saleDate);
+    const now = new Date();
+    return date.getFullYear() === now.getFullYear();
+  }).reduce((sum, s) => sum + (s.totalAmount || 0), 0);
 
   return (
     <div className="customer-container">
@@ -224,26 +240,26 @@ const Battery = () => {
       <section className="metrics">
         <div className="metric-card">
           <div className="metric-info">
-            <div className="metric-label">Total Batteries</div>
-            <div className="metric-value">{totalBatteries}</div>
+            <div className="metric-label">Total Available Batteries</div>
+            <div className="metric-value">{totalAvailableBatteries}</div>
           </div>
           <div className="metric-icon blue">🔋</div>
         </div>
 
         <div className="metric-card">
           <div className="metric-info">
-            <div className="metric-label">Monthly Sales</div>
-            <div className="metric-value">{monthlySales}</div>
+            <div className="metric-label">Yearly Sales</div>
+            <div className="metric-value">{yearlySales}</div>
           </div>
           <div className="metric-icon green">📈</div>
         </div>
 
         <div className="metric-card">
           <div className="metric-info">
-            <div className="metric-label">Out of Stocks</div>
-            <div className="metric-value">{outOfStocks}</div>
+            <div className="metric-label">Total Yearly Sale Amount</div>
+            <div className="metric-value">₹{totalYearlySaleAmount}</div>
           </div>
-          <div className="metric-icon red">⚠️</div>
+          <div className="metric-icon red">💰</div>
         </div>
       </section>
 
@@ -264,7 +280,7 @@ const Battery = () => {
         <div className="customer-filters">
           <input
             type="text"
-            placeholder="Search by ID, battery name, type..."
+            placeholder="Search by serial number, battery name, type..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="input-search"

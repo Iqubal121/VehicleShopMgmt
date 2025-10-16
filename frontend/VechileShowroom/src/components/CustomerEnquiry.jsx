@@ -91,10 +91,8 @@ const CustomerEnquiry = () => {
     const newErrors = {};
 
     if (!formData.customerName.trim()) newErrors.customerName = 'Customer name is required';
-    if (!formData.customerAddress.trim()) newErrors.customerAddress = 'Customer address is required';
     if (!formData.mobile.trim()) newErrors.mobile = 'Mobile number is required';
     if (!formData.interestedVehicle.trim()) newErrors.interestedVehicle = 'Interested vehicle is required';
-    if (!formData.estimateDate) newErrors.estimateDate = 'Estimate date is required';
 
     // Mobile number validation
     if (formData.mobile && !/^[6-9]\d{9}$/.test(formData.mobile)) {
@@ -121,10 +119,7 @@ const CustomerEnquiry = () => {
       const response = await fetch(`http://localhost:5000${url}`, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          createdAt: editingEnquiry?.createdAt || new Date().toISOString()
-        })
+        body: JSON.stringify(formData)
       });
 
       if (response.ok) {
@@ -269,11 +264,11 @@ const CustomerEnquiry = () => {
   };
 
   // Stats calculations
-  const totalEnquiries = enquiries.length;
-  const newEnquiries = enquiries.filter(e => e.status === 'New').length;
-  const inProgress = enquiries.filter(e => e.status === 'In Progress').length;
-  const completed = enquiries.filter(e => e.status === 'Completed').length;
-  const thisMonthEnquiries = enquiries.filter(e => {
+  const totalEnquiries = filteredEnquiries.length;
+  const newEnquiries = filteredEnquiries.filter(e => e.status === 'New').length;
+  const contacted = filteredEnquiries.filter(e => e.status === 'Contacted').length;
+  const completed = filteredEnquiries.filter(e => e.status === 'Completed').length;
+  const thisMonthEnquiries = filteredEnquiries.filter(e => {
     if (!e.createdAt) return false;
     const date = new Date(e.createdAt);
     const now = new Date();
@@ -306,8 +301,8 @@ const CustomerEnquiry = () => {
 
         <div className="metric-card">
           <div className="metric-info">
-            <div className="metric-label">In Progress</div>
-            <div className="metric-value">{inProgress}</div>
+            <div className="metric-label">Contacted</div>
+            <div className="metric-value">{contacted}</div>
           </div>
           <div className="metric-icon orange">⏳</div>
         </div>
@@ -356,7 +351,7 @@ const CustomerEnquiry = () => {
           >
             <option>All Status</option>
             <option>New</option>
-            <option>In Progress</option>
+            <option>Contacted</option>
             <option>Completed</option>
           </select>
           <input
@@ -465,7 +460,6 @@ const CustomerEnquiry = () => {
                   onChange={handleInputChange}
                   placeholder="Enter customer address"
                   rows="3"
-                  required
                 />
                 {errors.customerAddress && <span className="error">{errors.customerAddress}</span>}
               </div>
@@ -504,7 +498,6 @@ const CustomerEnquiry = () => {
                   name="estimateDate"
                   value={formData.estimateDate}
                   onChange={handleInputChange}
-                  required
                 />
                 {errors.estimateDate && <span className="error">{errors.estimateDate}</span>}
               </div>
@@ -518,7 +511,7 @@ const CustomerEnquiry = () => {
                   required
                 >
                   <option value="New">New</option>
-                  <option value="In Progress">In Progress</option>
+                  <option value="Contacted">Contacted</option>
                   <option value="Completed">Completed</option>
                 </select>
               </div>

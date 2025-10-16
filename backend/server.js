@@ -503,7 +503,7 @@ app.get("/api/customer-enquiries", async (req, res) => {
 // POST add new customer enquiry
 app.post("/api/customer-enquiries", async (req, res) => {
   try {
-    const newEnquiry = { ...req.body, status: req.body.status || 'New', createdAt: new Date().toISOString() };
+    const newEnquiry = { ...req.body, status: req.body.status || 'New', created_at: new Date().toISOString(), id: Date.now() };
     const { data, error } = await supabase.from('customer_enquiries').insert([newEnquiry]).select();
     if (error) throw error;
     res.status(201).json(data[0]);
@@ -676,16 +676,43 @@ app.get("/api/battery-sales", async (req, res) => {
 // POST add new battery sale
 app.post("/api/battery-sales", async (req, res) => {
   try {
-    const { data, error } = await supabase.from('battery_sales').insert([req.body]).select();
+    // Validate that serialNumber and batteries arrays have the same length
+    if (!req.body.serialNumber || !req.body.batteries ||
+        req.body.serialNumber.length !== req.body.batteries.length) {
+      return res.status(400).json({ error: 'serialNumber and batteries arrays must have the same length' });
+    }
+
+    // Validate that serial numbers in array match batteries
+    const serialNumbers = req.body.serialNumber;
+    const batteries = req.body.batteries;
+    for (let i = 0; i < serialNumbers.length; i++) {
+      if (serialNumbers[i] !== batteries[i].serialNumber) {
+        return res.status(400).json({ error: `Serial number mismatch at index ${i}` });
+      }
+    }
+
+    // Add id if not provided (for tables without auto-increment)
+    const saleData = { ...req.body };
+    if (!saleData.id) {
+      saleData.id = Date.now(); // Temporary fix, better to make id serial in database
+    }
+
+    const { data, error } = await supabase.from('battery_sales').insert([saleData]).select();
     if (error) throw error;
+
+    // Update battery statuses to 'Sold'
+    for (const serialNum of req.body.serialNumber) {
+      await supabase.from('batteries').update({ status: 'Sold' }).eq('serialNumber', serialNum);
+    }
+
     res.status(201).json(data[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET battery sale by by Serial Number
-app.get("/api/battery-sales/:serialNumber", async (req, res) => {
+// GET battery sale by ID
+app.get("/api/battery-sales/:id", async (req, res) => {
   try {
     const { data, error } = await supabase.from('battery_sales').select('*').eq('id', req.params.id);
     if (error) throw error;
@@ -699,7 +726,7 @@ app.get("/api/battery-sales/:serialNumber", async (req, res) => {
 });
 
 // PUT update battery sale by ID
-app.put("/api/battery-sales/:serialNumber", async (req, res) => {
+app.put("/api/battery-sales/:id", async (req, res) => {
   try {
     const { data, error } = await supabase.from('battery_sales').update(req.body).eq('id', req.params.id).select();
     if (error) throw error;
@@ -713,7 +740,7 @@ app.put("/api/battery-sales/:serialNumber", async (req, res) => {
 });
 
 // DELETE battery sale by ID
-app.delete("/api/battery-sales/:serialNumber", async (req, res) => {
+app.delete("/api/battery-sales/:id", async (req, res) => {
   try {
     const { data, error } = await supabase.from('battery_sales').delete().eq('id', req.params.id).select();
     if (error) throw error;

@@ -1200,6 +1200,11 @@ h1 {
   color: #1e40af;
 }
 
+.status-badge.contacted {
+  background-color: #fed7aa;
+  color: #9a3412;
+}
+
 .status-badge.in-progress {
   background-color: #fed7aa;
   color: #9a3412;
