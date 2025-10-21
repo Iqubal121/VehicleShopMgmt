@@ -34,7 +34,7 @@ const Vehicle = () => {
     if (searchTerm.trim() !== '') {
       const lowerSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(v =>
-        v.makeYear.toLowerCase().includes(lowerSearch) ||
+        v.make.toLowerCase().includes(lowerSearch) ||
         v.model.toLowerCase().includes(lowerSearch) ||
         (v.purchaseDate && v.purchaseDate.toString().includes(lowerSearch))
       );
@@ -85,7 +85,8 @@ const Vehicle = () => {
   const outOfStockCount = vehicles.filter(v => v.vehicleStatus === 'Sold').length;
 
   const handleRowClick = (vehicle) => {
-    navigate(`/vehicles/${vehicle.id}`, { state: { vehicle } });
+    console.log(vehicle);
+    navigate(`/vehicles/${vehicle.vehicleNumber}`, { state: { vehicle } });
   };
 
   const generateReportHTML = (vehicles) => {
@@ -136,7 +137,7 @@ const Vehicle = () => {
                 <td>${vehicle.model || '-'}</td>
                 <td>${vehicle.color || '-'}</td>
                 <td>${vehicle.chassisNumber || '-'}</td>
-                <td>₹${vehicle.exShowroomPrice ? vehicle.exShowroomPrice.toLocaleString() : '0'}</td>
+                <td>₹${vehicle.exshowroomPrice ? vehicle.exshowroomPrice.toLocaleString() : '0'}</td>
                 <td>${vehicle.vehicleStatus || '-'}</td>
                 <td>${vehicle.saleDate ? new Date(vehicle.saleDate).toLocaleDateString() : '-'}</td>
               </tr>
@@ -280,7 +281,7 @@ const Vehicle = () => {
                   <td>{vehicle.model || '-'}</td>
                   <td>{vehicle.color || '-'}</td>
                   <td>{vehicle.chassisNumber || '-'}</td>
-                  <td>₹{vehicle.exShowroomPrice ? vehicle.exShowroomPrice.toLocaleString() : '0'}</td>
+                  <td>₹{vehicle.exshowroomPrice ? vehicle.exshowroomPrice.toLocaleString() : '0'}</td>
                   <td>{vehicle.vehicleStatus || '-'}</td>
                   <td>{vehicle.saleDate ? new Date(vehicle.saleDate).toLocaleDateString() : '-'}</td>
                 </tr>

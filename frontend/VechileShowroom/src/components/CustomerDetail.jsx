@@ -14,6 +14,7 @@ const CustomerDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
+
   const customerFromState = location.state?.customer;
 
   const [customer, setCustomer] = useState({
@@ -54,16 +55,55 @@ const CustomerDetail = () => {
   const [error, setError] = useState(null);
 
   // Fetch customer data from backend using ID
-  const fetchCustomerData = async (customerId) => {
+  const fetchCustomerData = async (id) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:5000/api/customers/${customerId}`);
+
+      const response = await fetch(`http://localhost:5000/api/customers/${id}`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch customer data');
       }
-      const data = await response.json();
-      setCustomer(data);
+      const data = await response.json();    
+
+      setCustomer({
+        customerId: data.customer?.customerId || '',
+        date: data.customer?.date || '',
+        name: data.customer?.name || '',
+        fatherName: data.customer?.fatherName || '',
+        mobileNo: data.customer?.mobileNo || '',
+        ckycNo: data.customer?.ckycNo || '',
+        address: data.customer?.address || '',
+        vehicleNumber: data.vehicle?.vehicleNumber || '',
+        engineNumber: data.vehicle?.engineNumber || '',
+        make: data.vehicle?.make || '',
+        model: data.vehicle?.model || '',
+        chassisNumber: data.vehicle?.chassisNumber || '',
+        regnNumber: data.vehicle?.regnNumber || '',
+        exShowroomPrice: data.vehicle?.exshowroomPrice ? data.vehicle.exshowroomPrice.toString() : '',
+        batteryNumber: data.vehicle?.batteryNumber || '',
+        batteryCount: data.vehicle?.batteryCount ? data.vehicle.batteryCount.toString() : '',
+        saleType: data.sales?.saleType || '',
+        shopNumber: data.sales?.shopNumber ? data.sales.shopNumber.toString() : '',
+        loanNumber: data.sales?.loanNumber || '',
+        sanctionAmount: '', // Not in API response; set to empty or fetch from elsewhere
+        totalAmount: data.sales?.totalAmount ? data.sales.totalAmount.toString() : '',
+        paidAmount: data.sales?.paidAmount ? data.sales.paidAmount.toString() : '',
+        downPayment: data.sales?.downPayment ? data.sales.downPayment.toString() : '',
+        loanAmount: data.sales?.loanAmount ? data.sales.loanAmount.toString() : '',
+        tenure: data.sales?.tenure ? data.sales.tenure.toString() : '',
+        saleDate: data.sales?.saleDate || '',
+        firstEmiDate: data.sales?.firstEMIDate || '',
+        emiAmount: data.sales?.EMIAmount ? data.sales.EMIAmount.toString() : '',
+        emiSchedule: data.sales?.emiSchedule && Array.isArray(data.sales.emiSchedule) ? data.sales.emiSchedule : [],
+        loanStatus: data.summary?.loanStatus || '',
+        nextEmiDate: data.summary?.nextEmiDate || '',
+        promisedPaymentDate: '', // Not in API response; set to empty or fetch from elsewhere
+      });
+
+
+
     } catch (err) {
       setError(err.message);
       console.error('Error fetching customer:', err);
@@ -73,13 +113,12 @@ const CustomerDetail = () => {
   };
 
   useEffect(() => {
-    // If customer data is passed from state (from Customer.jsx), use it
-    if (customerFromState) {
-      setCustomer(customerFromState);
-    }
-    // Otherwise, fetch from backend using ID from URL
-    else if (id) {
+    //fetch from backend using ID from URL
+    if (id) {
       fetchCustomerData(id);
+    } else if (customerFromState) { // If customer data is passed from state (from Customer.jsx), use it
+      console.log('customerFromState :: ', { customerFromState });
+      setCustomer(customerFromState);
     }
   }, [customerFromState, id]);
 
@@ -88,13 +127,99 @@ const CustomerDetail = () => {
     setCustomer(prev => ({ ...prev, [name]: value }));
   };
 
+  // const handleEmiStatusChange = (index, newStatus) => {
+  //   setCustomer(prev => ({
+  //     ...prev,
+  //     emiSchedule: prev.emiSchedule.map((emi, i) =>
+  //       i === index ? { ...emi, status: newStatus, overdueCharges: newStatus === 'Overdue' ? 650 : 0 } : emi
+  //     )
+  //   }));
+  // };
+
   const handleEmiStatusChange = (index, newStatus) => {
-    setCustomer(prev => ({
-      ...prev,
-      emiSchedule: prev.emiSchedule.map((emi, i) =>
-        i === index ? { ...emi, status: newStatus, overdueCharges: newStatus === 'overdue' ? 650 : 0 } : emi
-      )
-    }));
+    setCustomer(prev => {
+      const updatedEmiSchedule = prev.emiSchedule.map((emi, i) =>
+        i === index ? { ...emi, status: newStatus, overdueCharges: newStatus === 'Overdue' ? 650 : 0 } : emi
+      );
+      console.log('Updated EMI Schedule:', updatedEmiSchedule); // Log to verify
+      return {
+        ...prev,
+        emiSchedule: updatedEmiSchedule
+      };
+    });
+  };
+  // Handler functions
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      // Basic validation      
+      if (!customer.customerId || customer.customerId !== id) {
+        throw new Error('Customer IDs is invalid or missing');
+      }
+      if (!customer.name || !customer.vehicleNumber || !customer.saleType) {
+        throw new Error('Names, Vehicle Number, and Sale Type are required');
+      }
+      console.log('handleupdate customer record:',customer);
+      const response = await fetch(`http://localhost:5000/api/customers/${customer.customerId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customer)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to update customer: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Update Response:', data);
+
+      alert('Customer updated successfully');
+
+    } catch (error) {
+      console.error('Error updating customer:', error.message);
+      setError(error.message);
+      alert(`Error updating customer: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  function handleDelete() {
+    if (!window.confirm('Are you sure you want to delete this customer?')) return;
+    fetch(`http://localhost:5000/api/customers/${customer.customerId}`, {
+      method: 'DELETE'
+    })
+      .then(response => {
+        if (response.ok) {
+          alert('Customer deleted successfully');
+          navigate('/customers');
+        } else {
+          alert('Failed to delete customer');
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting customer:', error);
+        alert('Error deleting customer');
+      });
+  };
+
+  function handlePrint() {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      alert('Pop-up blocked. Please allow pop-ups for this website to print.');
+      return;
+    }
+    const letterHTML = generateLetterHTML(customer, company);
+    printWindow.document.write(letterHTML);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    setTimeout(() => {
+      printWindow.close();
+    }, 1000);
   };
 
   // Helper function to determine which fields to show based on sale type
@@ -189,7 +314,7 @@ const CustomerDetail = () => {
           </button>
         </header>
         <div className="no-data-container">
-          <p>No customer data available.</p>
+          <p>No customer data available. {customer.customerId}</p>
           <button className="btn btn-primary" onClick={() => navigate(backConfig.backButtonRoute)}>
             {backConfig.backButtonText}
           </button>
@@ -368,12 +493,11 @@ const CustomerDetail = () => {
                       <td>₹{emi.overdueCharges.toLocaleString('en-IN')}</td>
                       <td>
                         <select
-                          value={emi.status}
-                          onChange={(e) => handleEmiStatusChange(index, e.target.value)}
-                        >
-                          <option value="paid">Paid</option>
-                          <option value="due">Due</option>
-                          <option value="overdue">Overdue</option>
+                          value={emi.status ? emi.status : 'Due'}
+                          onChange={(e) => handleEmiStatusChange(index, e.target.value)}>
+                          <option value="Paid">Paid</option>
+                          <option value="Due">Due</option>
+                          <option value="Overdue">Overdue</option>
                         </select>
                       </td>
                     </tr>
@@ -397,7 +521,7 @@ const CustomerDetail = () => {
             </label>
             <label>
               Remaining Amount:
-              <input type="number" value={customer.totalAmount - customer.paidAmount} readOnly />
+              <input type="number" value={String(customer.totalAmount - customer.paidAmount || 0)} readOnly />
             </label>
             <label>
               Sale Date:
@@ -428,60 +552,7 @@ const CustomerDetail = () => {
     </div>
   );
 
-  // Handler functions
-  function handleUpdate() {
-    fetch(`http://localhost:5000/api/customers/${customer.customerId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(customer)
-    })
-      .then(response => {
-        if (response.ok) {
-          alert('Customer updated successfully');
-        } else {
-          alert('Failed to update customer');
-        }
-      })
-      .catch(error => {
-        console.error('Error updating customer:', error);
-        alert('Error updating customer');
-      });
-  }
 
-  function handleDelete() {
-    if (!window.confirm('Are you sure you want to delete this customer?')) return;
-    fetch(`http://localhost:5000/api/customers/${customer.customerId}`, {
-      method: 'DELETE'
-    })
-      .then(response => {
-        if (response.ok) {
-          alert('Customer deleted successfully');
-          navigate('/customers');
-        } else {
-          alert('Failed to delete customer');
-        }
-      })
-      .catch(error => {
-        console.error('Error deleting customer:', error);
-        alert('Error deleting customer');
-      });
-  }
-
-  function handlePrint() {
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-      alert('Pop-up blocked. Please allow pop-ups for this website to print.');
-      return;
-    }
-    const letterHTML = generateLetterHTML(customer, company);
-    printWindow.document.write(letterHTML);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    setTimeout(() => {
-      printWindow.close();
-    }, 1000);
-  }
 };
 
 export default CustomerDetail;

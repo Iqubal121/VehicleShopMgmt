@@ -31,7 +31,7 @@ const MultiStepForm = () => {
     totalAmount: '',
     paidAmount: '',
     remainingAmount: '',
-    lastPaymentDate: '',
+    lastpaymentDate: '',
     // Sales - Finance fields
     loanNumber: '',
     downPayment: '',
@@ -91,10 +91,24 @@ const MultiStepForm = () => {
     const emi = parseFloat(formData.emiAmount);
     const tenure = parseInt(formData.tenure);
     let date = new Date(formData.firstEmiDate);
+    let status = 'Due';
+    let emiNo = '';
+    let principal = '';
+    let interest = '';
+    let balance = '';
+    let bucket = '';
+    let overdueCharges = '';
     for (let i = 0; i < tenure; i++) {
       schedule.push({
         date: date.toISOString().split('T')[0],
-        amount: emi
+        amount: emi,
+        status: status,
+        emiNo: i+1,
+        principal: principal,
+        interest: interest,
+        balance: balance,
+        bucket: bucket,
+        overdueCharges: overdueCharges,
       });
       date.setMonth(date.getMonth() + 1);
     }
@@ -279,7 +293,7 @@ const MultiStepForm = () => {
                 </div>
                 <div className="form-row">
                   <label>Last Payment Date:</label>
-                  <input type="date" name="lastPaymentDate" value={formData.lastPaymentDate} onChange={handleChange} required />
+                  <input type="date" name="lastpaymentDate" value={formData.lastpaymentDate} onChange={handleChange} required />
                 </div>
               </>
             )}
@@ -365,7 +379,7 @@ const MultiStepForm = () => {
                   <p><strong>Total Amount:</strong> {formData.totalAmount}</p>
                   <p><strong>Paid Amount:</strong> {formData.paidAmount}</p>
                   <p><strong>Remaining Amount:</strong> {formData.remainingAmount}</p>
-                  <p><strong>Last Payment Date:</strong> {formData.lastPaymentDate}</p>
+                  <p><strong>Last Payment Date:</strong> {formData.lastpaymentDate}</p>
                 </>
               )}
 
@@ -382,11 +396,47 @@ const MultiStepForm = () => {
                   <p><strong>First EMI Date:</strong> {formData.firstEmiDate}</p>
                   <p><strong>EMI Amount:</strong> {formData.emiAmount}</p>
                   <h5>EMI Schedule</h5>
-                  <ul>
+                  {/* <ul>
                     {formData.emiSchedule.map((emi, index) => (
-                      <li key={index}>{emi.date}: {emi.amount}</li>
+                      <li key={index}>
+                        <table className="emi-table">
+                          <tr className="emi-row">
+                            <td className="emi-cell"><strong>EMI Date :</strong> {emi.date} </td>
+                            <td className="emi-cell"><strong>EMI Amount :</strong> ₹{emi.amount}</td>
+                            <td className="emi-cell"><strong>Payment Status :</strong><span style={{ color: "orange" }}>{emi.status}</span></td>
+                          </tr>
+                        </table>
+                      </li>
                     ))}
-                  </ul>
+                  </ul> */}
+                  <table className="emi-table">
+                    <thead>
+                      <tr className="emi-header-row">
+                        <th className="emi-header-cell">EMI #</th>
+                        <th className="emi-header-cell">EMI Date</th>
+                        <th className="emi-header-cell">EMI Amount(₹)</th>
+                        <th className="emi-header-cell">Payment Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {formData.emiSchedule.map((emi, index) => (
+                        <tr key={index} className="emi-row">
+                          <td className="emi-cell">
+                            {emi.emiNo}
+                          </td>
+                          <td className="emi-cell">
+                            {emi.date}
+                          </td>
+                          <td className="emi-cell">
+                            ₹{emi.amount}
+                          </td>
+                          <td className="emi-cell">
+                            <strong style={{ color: "orange" }}>{emi.status}</strong>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </>
               )}
             </div>

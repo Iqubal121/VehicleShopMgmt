@@ -76,7 +76,7 @@ const Customer = () => {
   }).length;
 
   const handleRowClick = (customer) => {
-    navigate(`/customers/${customer.id}`, { state: { customer, from: 'customers' } });
+    navigate(`/customers/${customer.customerId}`, { state: { customer, from: 'customers' } });
   };
 
   const generateReportHTML = (customers) => {
@@ -120,11 +120,11 @@ const Customer = () => {
             ${customers.map((customer, index) => `
               <tr>
                 <td>${index + 1}</td>
-                <td>${customer.id || '-'}</td>
+                <td>${customer.customerId || '-'}</td>
                 <td>${customer.name || '-'}</td>
                 <td>${customer.fatherName || '-'}</td>
                 <td>${customer.address || '-'}</td>
-                <td>${customer.mobile || '-'}</td>
+                <td>${customer.mobileNo || '-'}</td>
                 <td>${customer.loanStatus || 'N/A'}</td>
               </tr>
             `).join('')}
@@ -240,7 +240,7 @@ const Customer = () => {
               <th>Customer ID</th>
               <th>Customer Name</th>
               <th>Parents Name</th>
-              <th>Customer Details</th>
+              <th>Customer Address</th>
               <th>Contact Number</th>
               <th>Status</th>
             </tr>
@@ -252,9 +252,9 @@ const Customer = () => {
               </tr>
             ) : (
               filteredCustomers.map((customer, index) => (
-                <tr key={customer.id || index} className="clickable-row" onClick={() => handleRowClick(customer)}>
+                <tr key={customer.customerId || index} className="clickable-row" onClick={() => handleRowClick(customer)}>
                   <td>{index + 1}</td>
-                  <td>{customer.id || '-'}</td>
+                  <td>{customer.customerId || '-'}</td>
                   <td>
                     <div>{customer.name}</div>
                   </td>
@@ -265,7 +265,7 @@ const Customer = () => {
                     <div>{customer.address || '-'}</div>
                   </td>
                   <td>
-                    <div>{customer.mobile || '-'}</div>
+                    <div>{customer.mobileNo || '-'}</div>
                   </td>
                   <td>
                     <div className={`status-badge ${customer.loanStatus === 'Active' ? 'status-active' : customer.loanStatus === 'Closed' ? 'status-closed' : ''}`}>

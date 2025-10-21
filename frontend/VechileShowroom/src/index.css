@@ -1791,3 +1791,27 @@ h1 {
     padding: 0.625rem 1.25rem;
   }
 }
+.emi-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.emi-header-row {
+  border: 1px solid black;
+  background-color: #f2f2f2;
+}
+
+.emi-header-cell {
+  border: 1px solid black;
+  padding: 8px;
+  text-align: left;
+}
+
+.emi-row {
+  border: 1px solid black;
+}
+
+.emi-cell {
+  border: 1px solid black;
+  padding: 8px;
+}

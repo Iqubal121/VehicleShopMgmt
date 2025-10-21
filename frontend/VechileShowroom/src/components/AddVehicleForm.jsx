@@ -4,12 +4,11 @@ import { useNavigate } from 'react-router-dom';
 const AddVehicleForm = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    vehicle_id: '',
     purchaseDate: '',
     vehicleNumber: '',
     engineNumber: '',
     chassisNumber: '',
-    makeYear: '',
+    make: '',
     model: '',
     color: '',
     regnNumber: '',
@@ -17,10 +16,12 @@ const AddVehicleForm = () => {
     batterySerialNumber: '',
     batteryType: '',
     vehicleChargerType: '',
-    exShowroomPrice: '',
+    exshowroomPrice: '',
     saleDate: '',
     vehicleStatus: 'In Stock',
   });
+
+
 
   const [errors, setErrors] = useState({});
 
@@ -42,17 +43,17 @@ const AddVehicleForm = () => {
     if (!formData.vehicleNumber) newErrors.vehicleNumber = 'Vehicle number is required';
     if (!formData.engineNumber) newErrors.engineNumber = 'Engine number is required';
     if (!formData.chassisNumber) newErrors.chassisNumber = 'Chassis number is required';
-    if (!formData.makeYear) newErrors.makeYear = 'Make year is required';
+    if (!formData.make) newErrors.make = 'Make year is required';
     if (!formData.model) newErrors.model = 'Model is required';
     if (!formData.color) newErrors.color = 'Color is required';
     if (!formData.regnNumber) newErrors.regnNumber = 'Registration number is required';
-    if (!formData.exShowroomPrice) newErrors.exShowroomPrice = 'Ex-showroom price is required';
+    if (!formData.exshowroomPrice) newErrors.exshowroomPrice = 'Ex-showroom price is required';
     // Numeric field validation
-    if (formData.exShowroomPrice && isNaN(formData.exShowroomPrice)) {
-      newErrors.exShowroomPrice = 'Ex-showroom price must be a number';
+    if (formData.exshowroomPrice && isNaN(formData.exshowroomPrice)) {
+      newErrors.exshowroomPrice = 'Ex-showroom price must be a number';
     }
-    if (formData.makeYear && (isNaN(formData.makeYear) || formData.makeYear < 1900 || formData.makeYear > new Date().getFullYear())) {
-      newErrors.makeYear = 'Please enter a valid year';
+    if (formData.make && (isNaN(formData.make) || formData.make < 1900 || formData.make > new Date().getFullYear())) {
+      newErrors.make = 'Please enter a valid year';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -66,13 +67,36 @@ const AddVehicleForm = () => {
     }
 
     try {
-      // Send the vehicle data to backend API for adding new vehicle
+      console.log('formData', { formData })
+      const insertVehicle = {        
+       // purchaseDate: formData.purchaseDate,
+        vehicleNumber: formData.vehicleNumber,
+        engineNumber: formData.engineNumber,
+        chassisNumber: formData.chassisNumber,
+        make: formData.make,
+        model: formData.model,
+        //color: formData.color,
+        regnNumber: formData.regnNumber,
+        //toolKit: formData.toolKit,
+        //batterySerialNumber: formData.batterySerialNumber,
+        //batteryType: formData.batteryType,
+        //vehicleChargerType: formData.vehicleChargerType,
+        exshowroomPrice: formData.exshowroomPrice,
+        //saleDate: formData.saleDate,
+       // vehicleStatus: 'In Stock',
+      };
+
+      // Send the vehicle data to backend API for adding new vehicle      
       const response = await fetch('http://localhost:5000/api/vehicles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(insertVehicle)
       });
-
+      if (!response.ok) {
+        const errorData = await response.json(); // Get detailed error from backend
+        console.log('errorData:', { errorData });
+        throw new Error('Failed to insert vehicle');
+      }
       if (response.ok) {
         alert('Vehicle added successfully!');
         navigate('/vehicles');
@@ -154,15 +178,15 @@ const AddVehicleForm = () => {
             <label>Make Year:</label>
             <input
               type="number"
-              name="makeYear"
-              value={formData.makeYear}
+              name="make"
+              value={formData.make}
               onChange={handleChange}
               placeholder="Enter make year"
               min="1900"
               max={new Date().getFullYear()}
               required
             />
-            {errors.makeYear && <span className="error">{errors.makeYear}</span>}
+            {errors.make && <span className="error">{errors.make}</span>}
           </div>
 
           <div className="form-row">
@@ -252,24 +276,20 @@ const AddVehicleForm = () => {
               placeholder="Enter vehicle charger type"
             />
           </div>
-
-
-
           <div className="form-row">
             <label>Ex-Showroom Price:</label>
             <input
               type="number"
-              name="exShowroomPrice"
-              value={formData.exShowroomPrice}
+              name="exshowroomPrice"
+              value={formData.exshowroomPrice}
               onChange={handleChange}
               placeholder="Enter ex-showroom price"
               step="0.01"
               min="0"
               required
             />
-            {errors.exShowroomPrice && <span className="error">{errors.exShowroomPrice}</span>}
+            {errors.exshowroomPrice && <span className="error">{errors.exshowroomPrice}</span>}
           </div>
-
           <div className="form-row">
             <label>Sale Date:</label>
             <input
@@ -279,8 +299,6 @@ const AddVehicleForm = () => {
               onChange={handleChange}
             />
           </div>
-          
-
           <div className="form-row">
             <label>Vehicle Status:</label>
             <select
