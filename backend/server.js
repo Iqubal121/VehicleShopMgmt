@@ -12,6 +12,113 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Helper functions for mapping
+const mapVehicleToCamelCase = (vehicle) => {
+  return {
+    vehicleNumber: vehicle.vehicleNumber,
+    engineNumber: vehicle.engineNumber,
+    make: vehicle.make,
+    model: vehicle.model,
+    chassisNumber: vehicle.chassisNumber,
+    batterySerialNumber: vehicle.batterySerialNumber,
+    batteryCount: vehicle.batteryCount,
+    regnNumber: vehicle.regnNumber,
+    exShowroomPrice: vehicle.exshowroomPrice,
+    purchaseDate: vehicle.purchaseDate,
+    color: vehicle.color,
+    toolKit: vehicle.toolKit,
+    batteryType: vehicle.batteryType,
+    vehicleChargerName: vehicle.vehicleChargerName,
+    saleDate: vehicle.saleDate,
+    vehicleStatus: vehicle.vehicleStatus,
+  };
+};
+
+const mapVehicleToDatabase = (vehicle) => ({
+  vehicleNumber: vehicle.vehicleNumber,
+  engineNumber: vehicle.engineNumber,
+  make: vehicle.make,
+  model: vehicle.model,
+  chassisNumber: vehicle.chassisNumber,
+  batterySerialNumber: vehicle.batterySerialNumber,
+  batteryCount: vehicle.batteryCount,
+  regnNumber: vehicle.regnNumber,
+  exshowroomPrice: vehicle.exshowroomPrice,
+  purchaseDate: vehicle.purchaseDate,
+  color: vehicle.color,
+  toolKit: vehicle.toolKit,
+  batteryType: vehicle.batteryType,
+  vehicleChargerName: vehicle.vehicleChargerName,
+  saleDate: vehicle.saleDate,
+  vehicleStatus: vehicle.vehicleStatus,
+});
+
+const mapBatteryToDatabase = (battery) => {
+  return {
+    serial_number: battery.serialNumber,
+    make: battery.make,
+    model: battery.model,
+    price: battery.price,
+    status: battery.status,
+  };
+};
+
+const mapBatteryToCamelCase = (battery) => {
+  return {
+    serialNumber: battery.serial_number,
+    make: battery.make,
+    model: battery.model,
+    price: battery.price,
+    status: battery.status,
+  };
+};
+
+// Validation function for vehicle data
+const validateVehicleData = (data, isUpdate = false) => {
+  const errors = [];
+
+  // Required fields for POST
+  if (!isUpdate) {
+    if (!data.vehicleNumber || typeof data.vehicleNumber !== 'string' || data.vehicleNumber.trim() === '') {
+      errors.push('vehicleNumber is required and must be a non-empty string');
+    }
+    if (!data.make || typeof data.make !== 'string' || data.make.trim() === '') {
+      errors.push('make is required and must be a non-empty string');
+    }
+    if (!data.model || typeof data.model !== 'string' || data.model.trim() === '') {
+      errors.push('model is required and must be a non-empty string');
+    }
+    if (!data.chassisNumber || typeof data.chassisNumber !== 'string' || data.chassisNumber.trim() === '') {
+      errors.push('chassisNumber is required and must be a non-empty string');
+    }
+  }
+
+  // Validate batteryCount: must be integer >= 0
+  if (data.batteryCount !== undefined) {
+    if (!Number.isInteger(data.batteryCount) || data.batteryCount < 0) {
+      errors.push('batteryCount must be a non-negative integer');
+    }
+  }
+
+  // Validate exShowroomPrice: must be number >= 0 if provided
+  if (data.exShowroomPrice !== undefined) {
+    if (typeof data.exShowroomPrice !== 'number' || data.exShowroomPrice < 0) {
+      errors.push('exShowroomPrice must be a non-negative number');
+    }
+  }
+
+  // Validate purchaseDate: must be valid date string if provided
+  if (data.purchaseDate && isNaN(Date.parse(data.purchaseDate))) {
+    errors.push('purchaseDate must be a valid date');
+  }
+
+  // Validate saleDate: must be valid date string if provided
+  if (data.saleDate && isNaN(Date.parse(data.saleDate))) {
+    errors.push('saleDate must be a valid date');
+  }
+
+  return errors;
+};
 
 app.get("/", (req, res) => {
   res.send("Backend is running!");
@@ -223,10 +330,17 @@ app.post('/api/sales', async (req, res) => {
       make: formData.make,
       model: formData.model,
       chassisNumber: formData.chassisNumber,
-      batteryNumber: formData.batteryNumber || '', // Fallback to '' if not provided
+      batterySerialNumber: formData.batterySerialNumber || '', // Fallback to '' if not provided
       batteryCount: parseInt(formData.batteryCount) || 0, // Fallback to 0 if not provided
       regnNumber: formData.regnNumber,
       exShowroomPrice: parseFloat(formData.exShowroomPrice),
+      color: formData.color || '',
+      toolKit: formData.toolKit || '',
+      batteryType: formData.batteryType || '',
+      vehicleChargerName: formData.vehicleChargerName || '',
+      purchaseDate: formData.purchaseDate || null,
+      saleDate: formData.saleDate || null,
+      vehicleStatus: formData.vehicleStatus || 'Sold',
     };
 
 
@@ -237,35 +351,37 @@ app.post('/api/sales', async (req, res) => {
       customerId: formData.customerId,
       vehicleId: formData.vehicleNumber,
       saleType: formData.saleType,
-      saleDate: formData.saleDate,
-      totalAmount: parseFloat(formData.totalAmount)
+      saleDate: formData.saleDate
     };
 
     // Add sale-type-specific fields
     if (formData.saleType === 'Cash') {
+      saleData.totalAmount = parseFloat(formData.totalAmount);
       saleData.shopNumber = formData.shopNumber,
         saleData.paidAmount = parseFloat(formData.paidAmount);
       saleData.remainingAmount = parseFloat(formData.remainingAmount);
       saleData.lastpaymentDate = formData.lastpaymentDate;
     } else if (formData.saleType === 'Finance') {
+      saleData.totalAmount = parseFloat(formData.downPayment) + parseFloat(formData.loanAmount);
+      saleData.status = 'Active'; // Set status to Active for Finance sales
       saleData.loanNumber = formData.loanNumber;
       saleData.downPayment = parseFloat(formData.downPayment);
       saleData.loanAmount = parseFloat(formData.loanAmount);
       saleData.tenure = parseInt(formData.tenure);
       saleData.interestRate = parseFloat(formData.interestRate);
-      saleData.firstEMIDate = formData.firstEmiDate;
-      saleData.EMIAmount = parseFloat(formData.emiAmount);
-      saleData.emiSchedule = formData.emiSchedule.map(emi => ({
+      saleData.firstEMIDate = formData.firstEMIDate;
+      saleData.EMIAmount = parseFloat(formData.EMIAmount);
+      saleData.emiSchedule = (formData.emiSchedule && Array.isArray(formData.emiSchedule)) ? formData.emiSchedule.map(emi => ({
         date: emi.date,
-        amount: parseFloat(emi.amount),
-        status: emi.status,
-        emiNo: emi.emiNo,
-        principal: emi.principal,
-        interest: emi.interest,
-        balance: emi.balance,
-        bucket: emi.bucket,
-        overdueCharges: emi.overdueCharges,
-      }));
+        amount: parseFloat(emi.amount) || 0,
+        status: emi.status || 'Due',
+        emiNo: parseInt(emi.emiNo) || 0,
+        principal: parseFloat(emi.principal) || 0,
+        interest: parseFloat(emi.interest) || 0,
+        balance: parseFloat(emi.balance) || 0,
+        bucket: emi.bucket || '0',
+        overdueCharges: parseFloat(emi.overdueCharges) || 0,
+      })) : null;
 
     }
 
@@ -278,6 +394,17 @@ app.post('/api/sales', async (req, res) => {
 
     if (error) {
       throw new Error(`Transaction Failed : ${error.message}`);
+    }
+
+    // Update vehicle status to 'Sold' after successful sale
+    const { error: updateError } = await supabase
+      .from('vehicles')
+      .update({ vehicleStatus: 'Sold', saleDate: formData.saleDate })
+      .eq('vehicleNumber', formData.vehicleNumber);
+
+    if (updateError) {
+      console.error('Error updating vehicle status:', updateError);
+      // Note: Transaction succeeded but status update failed - consider rollback in production
     }
 
     // Return success response
@@ -491,6 +618,9 @@ app.get("/api/customers/:id", async (req, res) => {
       throw vehicleError;
     }
 
+    // Map vehicle data to camelCase for consistent field naming
+    const mappedVehicle = vehicle ? mapVehicleToCamelCase(vehicle) : null;
+
     // Initialize default values for summary
     let nextEmiDate = '-';
     let loanStatus = 'Closed';
@@ -498,15 +628,15 @@ app.get("/api/customers/:id", async (req, res) => {
     let totalAmount = sales ? parseFloat(sales.totalAmount) || 0 : 0;
     let totalPaid = sales ? parseFloat(sales.paidAmount) || 0 : 0;
 
-    // Calculate nextEmiDate as the date of the first unpaid EMI (status 'due' or 'overdue')    
-    if (sales.emiSchedule.length > 0) {
+    // Calculate nextEmiDate as the date of the first unpaid EMI (status 'due' or 'overdue')
+    if (sales && sales.emiSchedule && sales.emiSchedule.length > 0) {
       const firstUnpaidEmi = sales.emiSchedule.find(emi => emi.status !== 'Paid');
       nextEmiDate = firstUnpaidEmi?.date || '-';
     }
     console.log('nextEmiDate : ', nextEmiDate)
 
-    // Update loanStatus based on EMI statuses    
-    if (sales.emiSchedule.length > 0) {
+    // Update loanStatus based on EMI statuses
+    if (sales && sales.emiSchedule && sales.emiSchedule.length > 0) {
       const hasOverdue = sales.emiSchedule.some(emi => emi.status === 'Overdue');
       const hasDue = sales.emiSchedule.some(emi => emi.status === 'Due');
       if (hasOverdue) {
@@ -519,7 +649,7 @@ app.get("/api/customers/:id", async (req, res) => {
     // Return EVERYTHING
     const response = {
       customer,
-      vehicle,
+      vehicle: mappedVehicle,
       sales: sales || null,
       summary: {
         nextEmiDate,
@@ -552,7 +682,7 @@ app.put('/api/customers/:customerId', async (req, res) => {
     make: formData.make,
     model: formData.model,
     chassisNumber: formData.chassisNumber,
-    batteryNumber: formData.batteryNumber || '', // Fallback to '' if not provided
+    batterySerialNumber: formData.batterySerialNumber || '', // Fallback to '' if not provided
     batteryCount: parseInt(formData.batteryCount) || 0, // Fallback to 0 if not provided
     regnNumber: formData.regnNumber,
     exShowroomPrice: parseFloat(formData.exShowroomPrice) || 0,
@@ -571,7 +701,7 @@ app.put('/api/customers/:customerId', async (req, res) => {
     tenure: parseInt(formData.tenure) || 0,
     firstEMIDate: formData.firstEmiDate || null,
     EMIAmount : parseFloat(formData.emiAmount) || 0,
-    emiSchedule :formData.emiSchedule.map(emi => ({
+    emiSchedule : (formData.emiSchedule && Array.isArray(formData.emiSchedule)) ? formData.emiSchedule.map(emi => ({
       emiNo: parseInt(emi.emiNo) || 0,
       date: emi.date || '',
       amount: parseFloat(emi.amount) || 0,
@@ -581,7 +711,7 @@ app.put('/api/customers/:customerId', async (req, res) => {
       balance: parseFloat(emi.balance) || 0,
       bucket: emi.bucket || '0',
       overdueCharges: parseFloat(emi.overdueCharges) || 0,
-    })),
+    })) : null,
     loanStatus:null,
     promisedPaymentDate:null
   }; 
@@ -626,7 +756,7 @@ app.put('/api/customers/:customerId', async (req, res) => {
       p_chassis_number: reqObj.chassisNumber,
       p_regn_number: reqObj.regnNumber,
       p_exshowroom_price: parseFloat(reqObj.exShowroomPrice) || 0,
-      p_battery_number: reqObj.batteryNumber,
+      p_battery_serial_number: reqObj.batterySerialNumber,
       p_battery_count: parseInt(reqObj.batteryCount) || 1,
       p_sale_type: reqObj.saleType,
       p_shop_number: parseInt(reqObj.shopNumber) || null,
@@ -660,7 +790,8 @@ app.get("/api/vehicles", async (req, res) => {
   try {
     const { data, error } = await supabase.from('vehicles').select('*');
     if (error) throw error;
-    res.json(data);
+    const mappedData = data.map(mapVehicleToCamelCase);
+    res.json(mappedData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -669,47 +800,59 @@ app.get("/api/vehicles", async (req, res) => {
 // POST add new vehicle
 app.post("/api/vehicles", async (req, res) => {
   try {
-    console.log('insert vehicle: ',req.body);
-    const { data, error } = await supabase.from('vehicles').insert([req.body]).select();
+    console.log('insert vehicle: ', req.body);
+
+    // Validate input data
+    const validationErrors = validateVehicleData(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: 'Validation failed', details: validationErrors });
+    }
+
+    // Check for duplicate vehicleNumber
+    const { data: existingVehicle, error: checkError } = await supabase
+      .from('vehicles')
+      .select('vehicleNumber')
+      .eq('vehicleNumber', req.body.vehicleNumber)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError;
+    }
+
+    if (existingVehicle) {
+      return res.status(409).json({ error: 'Vehicle with this vehicleNumber already exists' });
+    }
+
+    const vehicleData = mapVehicleToDatabase(req.body);
+    const { data, error } = await supabase.from('vehicles').insert([vehicleData]).select();
     if (error) throw error;
-    res.status(201).json(data[0]);
+    const mappedData = mapVehicleToCamelCase(data[0]);
+    res.status(201).json(mappedData);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in POST /api/vehicles:', err);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
-// GET vehicle by ID
-app.get("/api/vehicles/:id", async (req, res) => {
+// GET vehicle by vehicleNumber
+app.get("/api/vehicles/:vehicleNumber", async (req, res) => {
   try {
-    const { data, error } = await supabase.from('vehicles').select('*').eq('id', req.params.id);
+    const { data, error } = await supabase.from('vehicles').select('*').eq('vehicleNumber', req.params.vehicleNumber);
     if (error) throw error;
     if (data.length === 0) {
       return res.status(404).json({ error: 'Vehicle not found' });
     }
-    res.json(data[0]);
+    const mappedData = mapVehicleToCamelCase(data[0]);
+    res.json(mappedData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// PUT update vehicle by ID
-app.put("/api/vehicles/:id", async (req, res) => {
-  try {    
-    const { data, error } = await supabase.from('vehicles').update(req.body).eq('vehicleNumber', req.params.id).select();
-    if (error) throw error;
-    if (data.length === 0) {
-      return res.status(404).json({ error: 'Vehicle not found' });
-    }
-    res.json(data[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// DELETE vehicle by ID
-app.delete("/api/vehicles/:id", async (req, res) => {
+// PUT update vehicle by vehicleNumber
+app.put("/api/vehicles/:vehicleNumber", async (req, res) => {
   try {
-    const { data, error } = await supabase.from('vehicles').delete().eq('id', req.params.id).select();
+    const { data, error } = await supabase.from('vehicles').update(req.body).eq('vehicleNumber', req.params.vehicleNumber).select();
     if (error) throw error;
     if (data.length === 0) {
       return res.status(404).json({ error: 'Vehicle not found' });
@@ -720,9 +863,43 @@ app.delete("/api/vehicles/:id", async (req, res) => {
   }
 });
 
+// DELETE vehicle by vehicleNumber
+app.delete("/api/vehicles/:vehicleNumber", async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('vehicles').delete().eq('vehicleNumber', req.params.vehicleNumber).select();
+    if (error) throw error;
+    if (data.length === 0) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+    res.json(data[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
+// PUT update vehicle status by vehicleNumber
+app.put("/api/vehicles/:vehicleNumber/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
 
+    const { data, error } = await supabase
+      .from('vehicles')
+      .update({ vehicleStatus: status })
+      .eq('vehicleNumber', req.params.vehicleNumber)
+      .select();
 
+    if (error) throw error;
+    if (data.length === 0) {
+      return res.status(404).json({ error: 'Vehicle not found' });
+    }
+    res.json(data[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // GET customer enquiries
 app.get("/api/customer-enquiries", async (req, res) => {
@@ -787,31 +964,6 @@ app.delete("/api/customer-enquiries/:id", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-// Helper function to map database fields to camelCase
-const mapBatteryToCamelCase = (battery) => ({
-  id: battery.id,
-  serialNumber: battery.serialNumber,
-  batteryName: battery.batteryName,
-  batteryType: battery.batteryType,
-  price: battery.price,
-  warrantyMonths: battery.warrantyMonths,
-  purchaseDate: battery.purchaseDate,
-  status: battery.status,
-  created_at: battery.created_at,
-  updated_at: battery.updated_at
-});
-
-// Helper function to map camelCase to database fields
-const mapBatteryToDatabase = (battery) => ({
-  serialNumber: battery.serialNumber,
-  batteryName: battery.batteryName,
-  batteryType: battery.batteryType,
-  price: battery.price,
-  warrantyMonths: battery.warrantyMonths,
-  purchaseDate: battery.purchaseDate,
-  status: battery.status
 });
 
 // GET batteries

@@ -32,7 +32,7 @@ const CustomerDetail = () => {
     chassisNumber: '',
     regnNumber: '',
     exShowroomPrice: '',
-    batteryNumber: '',
+    batterySerialName: '',
     batteryCount: '',
     saleType: '',
     shopNumber: '',
@@ -45,6 +45,7 @@ const CustomerDetail = () => {
     saleDate: '',
     firstEmiDate: '',
     emiAmount: '',
+    interestRate: '',
     emiSchedule: [],
     loanStatus: '',
     nextEmiDate: '',
@@ -82,8 +83,15 @@ const CustomerDetail = () => {
         chassisNumber: data.vehicle?.chassisNumber || '',
         regnNumber: data.vehicle?.regnNumber || '',
         exShowroomPrice: data.vehicle?.exshowroomPrice ? data.vehicle.exshowroomPrice.toString() : '',
-        batteryNumber: data.vehicle?.batteryNumber || '',
+        batterySerialName: data.vehicle?.batterySerialName || '',
         batteryCount: data.vehicle?.batteryCount ? data.vehicle.batteryCount.toString() : '',
+        color: data.vehicle?.color || '',
+        toolKit: data.vehicle?.toolKit || '',
+        batteryType: data.vehicle?.batteryType || '',
+        vehicleChargerType: data.vehicle?.vehicleChargerType || '',
+        purchaseDate: data.vehicle?.purchaseDate || '',
+        saleDate: data.vehicle?.saleDate || '',
+        vehicleStatus: data.vehicle?.vehicleStatus || '',
         saleType: data.sales?.saleType || '',
         shopNumber: data.sales?.shopNumber ? data.sales.shopNumber.toString() : '',
         loanNumber: data.sales?.loanNumber || '',
@@ -93,10 +101,9 @@ const CustomerDetail = () => {
         downPayment: data.sales?.downPayment ? data.sales.downPayment.toString() : '',
         loanAmount: data.sales?.loanAmount ? data.sales.loanAmount.toString() : '',
         tenure: data.sales?.tenure ? data.sales.tenure.toString() : '',
-        saleDate: data.sales?.saleDate || '',
         firstEmiDate: data.sales?.firstEMIDate || '',
         emiAmount: data.sales?.EMIAmount ? data.sales.EMIAmount.toString() : '',
-        emiSchedule: data.sales?.emiSchedule && Array.isArray(data.sales.emiSchedule) ? data.sales.emiSchedule : [],
+        emiSchedule: data.sales?.emiSchedule && Array.isArray(data.sales.emiSchedule) ? updateBuckets(data.sales.emiSchedule) : [],
         loanStatus: data.summary?.loanStatus || '',
         nextEmiDate: data.summary?.nextEmiDate || '',
         promisedPaymentDate: '', // Not in API response; set to empty or fetch from elsewhere
@@ -122,6 +129,59 @@ const CustomerDetail = () => {
     }
   }, [customerFromState, id]);
 
+  // Generate EMI schedule when loanAmount, tenure, interestRate, firstEmiDate change
+  useEffect(() => {
+    const loanAmount = parseFloat(customer.loanAmount);
+    const tenure = parseInt(customer.tenure);
+    const interestRate = parseFloat(customer.interestRate);
+    const firstEmiDate = customer.firstEmiDate;
+
+    if (loanAmount > 0 && tenure > 0 && interestRate > 0 && firstEmiDate && (!customer.emiSchedule || customer.emiSchedule.length === 0)) {
+      const emiSchedule = generateEmiSchedule(loanAmount, tenure, interestRate, firstEmiDate);
+      setCustomer(prev => ({ ...prev, emiSchedule, emiAmount: emiSchedule[0]?.amount.toString() || '' }));
+    }
+  }, [customer.loanAmount, customer.tenure, customer.interestRate, customer.firstEmiDate, customer.emiSchedule]);
+
+  // Function to generate EMI schedule
+  const generateEmiSchedule = (loanAmount, tenure, interestRate, firstEmiDate) => {
+    const monthlyRate = interestRate / 12 / 100;
+    const emiAmount = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenure)) / (Math.pow(1 + monthlyRate, tenure) - 1);
+    const schedule = [];
+    let balance = loanAmount;
+    let date = new Date(firstEmiDate);
+
+    for (let i = 1; i <= tenure; i++) {
+      const interest = balance * monthlyRate;
+      const principal = emiAmount - interest;
+      balance -= principal;
+
+      schedule.push({
+        emiNo: i,
+        date: date.toISOString().split('T')[0],
+        principal: Math.round(principal),
+        interest: Math.round(interest),
+        amount: Math.round(emiAmount),
+        balance: Math.round(balance),
+        bucket: 0,
+        overdueCharges: 0,
+        status: 'Due'
+      });
+
+      date.setMonth(date.getMonth() + 1);
+    }
+
+    return schedule;
+  };
+
+  // Function to update buckets based on overdue status
+  const updateBuckets = (schedule) => {
+    let overdueCount = 0;
+    return schedule.map(emi => {
+      if (emi.status === 'Overdue') overdueCount++;
+      return { ...emi, bucket: overdueCount };
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCustomer(prev => ({ ...prev, [name]: value }));
@@ -141,12 +201,22 @@ const CustomerDetail = () => {
       const updatedEmiSchedule = prev.emiSchedule.map((emi, i) =>
         i === index ? { ...emi, status: newStatus, overdueCharges: newStatus === 'Overdue' ? 650 : 0 } : emi
       );
-      console.log('Updated EMI Schedule:', updatedEmiSchedule); // Log to verify
+      const updatedWithBuckets = updateBuckets(updatedEmiSchedule);
+      console.log('Updated EMI Schedule:', updatedWithBuckets); // Log to verify
       return {
         ...prev,
-        emiSchedule: updatedEmiSchedule
+        emiSchedule: updatedWithBuckets
       };
     });
+  };
+
+  // Calculate total payable amount
+  const calculateTotalPayable = () => {
+    const overdueEmis = customer.emiSchedule.filter(emi => emi.status === 'Overdue');
+    const overdueCount = overdueEmis.length;
+    const emiAmount = parseFloat(customer.emiAmount) || 0;
+    const overdueCharges = 650;
+    return (overdueCount * emiAmount) + (overdueCount * overdueCharges);
   };
   // Handler functions
   const handleUpdate = async (e) => {
@@ -395,12 +465,40 @@ const CustomerDetail = () => {
           <input type="number" name="exShowroomPrice" value={customer.exShowroomPrice} onChange={handleChange} />
         </label>
         <label>
-          Battery Number:
-          <input type="text" name="batteryNumber" value={customer.batteryNumber} onChange={handleChange} />
+          Battery Serial Name:
+          <input type="text" name="batterySerialName" value={customer.batterySerialName} onChange={handleChange} />
         </label>
         <label>
           Battery Count:
           <input type="number" name="batteryCount" value={customer.batteryCount} onChange={handleChange} />
+        </label>
+        <label>
+          Color:
+          <input type="text" name="color" value={customer.color} onChange={handleChange} />
+        </label>
+        <label>
+          Tool Kit:
+          <input type="text" name="toolKit" value={customer.toolKit} onChange={handleChange} />
+        </label>
+        <label>
+          Battery Type:
+          <input type="text" name="batteryType" value={customer.batteryType} onChange={handleChange} />
+        </label>
+        <label>
+          Vehicle Charger Type:
+          <input type="text" name="vehicleChargerType" value={customer.vehicleChargerType} onChange={handleChange} />
+        </label>
+        <label>
+          Purchase Date:
+          <input type="date" name="purchaseDate" value={customer.purchaseDate} onChange={handleChange} />
+        </label>
+        <label>
+          Sale Date:
+          <input type="date" name="saleDate" value={customer.saleDate} onChange={handleChange} />
+        </label>
+        <label>
+          Vehicle Status:
+          <input type="text" name="vehicleStatus" value={customer.vehicleStatus} onChange={handleChange} />
         </label>
 
         {/* Sales Details */}
@@ -436,6 +534,10 @@ const CustomerDetail = () => {
             <label>
               Tenure:
               <input type="number" name="tenure" value={customer.tenure} onChange={handleChange} />
+            </label>
+            <label>
+              Interest Rate (% per annum):
+              <input type="number" name="interestRate" value={customer.interestRate} onChange={handleChange} />
             </label>
             <label>
               Sale Date:
@@ -477,6 +579,7 @@ const CustomerDetail = () => {
                     <th>Balance</th>
                     <th>Bucket (Overdue EMIs)</th>
                     <th>Overdue Charges</th>
+                    <th>Total</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -491,6 +594,7 @@ const CustomerDetail = () => {
                       <td>₹{emi.balance.toLocaleString('en-IN')}</td>
                       <td>{emi.bucket}</td>
                       <td>₹{emi.overdueCharges.toLocaleString('en-IN')}</td>
+                      <td>₹{(emi.amount + emi.overdueCharges).toLocaleString('en-IN')}</td>
                       <td>
                         <select
                           value={emi.status ? emi.status : 'Due'}
@@ -503,6 +607,13 @@ const CustomerDetail = () => {
                     </tr>
                   ))}
                 </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'right', fontWeight: 'bold' }}>Total Payable for Overdue EMIs:</td>
+                    <td style={{ fontWeight: 'bold' }}>₹{calculateTotalPayable().toLocaleString('en-IN')}</td>
+                    <td colSpan="4"></td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </>

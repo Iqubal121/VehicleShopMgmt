@@ -14,8 +14,9 @@ const AddVehicleForm = () => {
     regnNumber: '',
     toolKit: '',
     batterySerialNumber: '',
+    batteryCount: '',
     batteryType: '',
-    vehicleChargerType: '',
+    vehicleChargerName: '',
     exshowroomPrice: '',
     saleDate: '',
     vehicleStatus: 'In Stock',
@@ -68,22 +69,23 @@ const AddVehicleForm = () => {
 
     try {
       console.log('formData', { formData })
-      const insertVehicle = {        
-       // purchaseDate: formData.purchaseDate,
+      const insertVehicle = {
+        purchaseDate: formData.purchaseDate,
         vehicleNumber: formData.vehicleNumber,
         engineNumber: formData.engineNumber,
         chassisNumber: formData.chassisNumber,
         make: formData.make,
         model: formData.model,
-        //color: formData.color,
+        color: formData.color,
         regnNumber: formData.regnNumber,
-        //toolKit: formData.toolKit,
-        //batterySerialNumber: formData.batterySerialNumber,
-        //batteryType: formData.batteryType,
-        //vehicleChargerType: formData.vehicleChargerType,
-        exshowroomPrice: formData.exshowroomPrice,
-        //saleDate: formData.saleDate,
-       // vehicleStatus: 'In Stock',
+        toolKit: formData.toolKit,
+        batterySerialNumber: formData.batterySerialNumber,
+        batteryCount: formData.batteryCount ? parseInt(formData.batteryCount, 10) : null,
+        batteryType: formData.batteryType,
+        vehicleChargerName: formData.vehicleChargerName,
+        exshowroomPrice: formData.exshowroomPrice ? parseFloat(formData.exshowroomPrice) : null,
+        saleDate: formData.saleDate || null,
+        vehicleStatus: formData.vehicleStatus,
       };
 
       // Send the vehicle data to backend API for adding new vehicle      
@@ -253,6 +255,18 @@ const AddVehicleForm = () => {
           </div>
 
           <div className="form-row">
+            <label>Battery Count:</label>
+            <input
+              type="number"
+              name="batteryCount"
+              value={formData.batteryCount}
+              onChange={handleChange}
+              placeholder="Enter battery count"
+              min="0"
+            />
+          </div>
+
+          <div className="form-row">
             <label>Battery Type:</label>
             <select
               name="batteryType"
@@ -267,13 +281,13 @@ const AddVehicleForm = () => {
           </div>
 
           <div className="form-row">
-            <label>Vehicle Charger Type:</label>
+            <label>Vehicle Charger Name:</label>
             <input
               type="text"
-              name="vehicleChargerType"
-              value={formData.vehicleChargerType}
+              name="vehicleChargerName"
+              value={formData.vehicleChargerName}
               onChange={handleChange}
-              placeholder="Enter vehicle charger type"
+              placeholder="Enter vehicle charger name"
             />
           </div>
           <div className="form-row">

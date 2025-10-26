@@ -1,4 +1,5 @@
 export const generateLetterHTML = (customer, company) => {
+  const totalPayable = customer.emiSchedule ? customer.emiSchedule.filter(emi => emi.status === 'Overdue').reduce((sum, emi) => sum + (emi.amount + emi.overdueCharges), 0) : 0;
   return `
     <html>
     <head>
@@ -45,7 +46,8 @@ export const generateLetterHTML = (customer, company) => {
           GSTIN/UIN No.: 19AABCR4128M1YA<br>
           CIN No.: U67100WB1990PTC0PTC049807<br>
           Dealer Name: ATIF ENTERPRISES<br>
-          Paschimpally, Near SBI Bank, Kishanganj (Bihar) 855107, Mob.: 8809173140
+          Paschimpally, Near SBI Bank, Kishanganj (Bihar) 855107, Mob.: 8809173140<br>
+          <strong>Total Payable for Overdue EMIs: ₹${totalPayable.toLocaleString('en-IN')}</strong>
         </div>
       </div>
 
@@ -96,9 +98,22 @@ export const generateLetterHTML = (customer, company) => {
                 <td><strong>Registration Number:</strong> ${customer.regnNumber}</td>
               </tr>
               <tr>
-                <td><strong>Battery Number:</strong> ${customer.batteryNumber || 'N/A'}</td>
+                <td><strong>Battery Serial Number:</strong> ${customer.batterySerialName || 'N/A'}</td>
                 <td><strong>Battery Count:</strong> ${customer.batteryCount || 'N/A'}</td>
                 <td><strong>Ex-showroom Price:</strong> ₹${customer.exShowroomPrice}</td>
+              </tr>
+              <tr>
+                <td><strong>Color:</strong> ${customer.color || 'N/A'}</td>
+                <td><strong>Tool Kit:</strong> ${customer.toolKit || 'N/A'}</td>
+                <td><strong>Battery Type:</strong> ${customer.batteryType || 'N/A'}</td>
+              </tr>
+              <tr>
+                <td><strong>Vehicle Charger Type:</strong> ${customer.vehicleChargerType || 'N/A'}</td>
+                <td><strong>Purchase Date:</strong> ${customer.purchaseDate || 'N/A'}</td>
+                <td><strong>Sale Date:</strong> ${customer.saleDate || 'N/A'}</td>
+              </tr>
+              <tr>
+                <td colspan="3"><strong>Vehicle Status:</strong> ${customer.vehicleStatus || 'N/A'}</td>
               </tr>
             </table>
 
@@ -153,6 +168,7 @@ export const generateLetterHTML = (customer, company) => {
                     <th>Balance</th>
                     <th>Bucket</th>
                     <th>Overdue Charges</th>
+                    <th>Total</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -167,10 +183,18 @@ export const generateLetterHTML = (customer, company) => {
                       <td>₹${emi.balance || 0}</td>
                       <td>${emi.bucket || 0}</td>
                       <td>₹${emi.overdueCharges || 0}</td>
+                      <td>₹${(emi.amount + emi.overdueCharges) || 0}</td>
                       <td>${emi.status || 'Due'}</td>
                     </tr>
-                  `).join('') : '<tr><td colspan="9">No EMI schedule available</td></tr>'}
+                  `).join('') : '<tr><td colspan="10">No EMI schedule available</td></tr>'}
                 </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="4" style="text-align: right; font-weight: bold;">Total Payable for Overdue EMIs:</td>
+                    <td style="font-weight: bold;">₹${customer.emiSchedule ? customer.emiSchedule.filter(emi => emi.status === 'Overdue').reduce((sum, emi) => sum + (emi.amount + emi.overdueCharges), 0) : 0}</td>
+                    <td colspan="5"></td>
+                  </tr>
+                </tfoot>
               </table>
             ` : ''}
           </div>
