@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
-
+jwt = require('jsonwebtoken');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -10,7 +10,10 @@ app.use(express.json());
 // Supabase client setup
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseAdminKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
 const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseAdmin = createClient(supabaseUrl, supabaseAdminKey);
 
 // Helper functions for mapping
 const mapVehicleToCamelCase = (vehicle) => {
@@ -188,6 +191,49 @@ app.post("/api/signout", async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
+});
+
+// Forgot Password Endpoint
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const {data, error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+      redirectTo: 'http://localhost:5173/resetpassword',
+    });
+    console.log('Forgot Data: ', {data});
+    if (error) return res.status(400).json({ message: error.message });
+    res.json({ message: 'Reset link sent to your email.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+
+});
+
+app.post('/api/resetpassword', async (req, res) => {
+  const { accessToken, newPassword } = req.body;
+
+  if (!accessToken || !newPassword) {
+    return res.status(400).json({ message: 'Missing access token or new password.' });
+  }
+
+  try {
+    const decoded = jwt.decode(accessToken);
+    const userId = decoded?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: 'Invalid access token.' });
+    }
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      password: newPassword,
+    });
+
+    if (error) return res.status(400).json({ message: error.message });
+    res.json({ message: 'Password updated successfully.' });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ message: 'Internal server error.'+ err });
+  }
+
 });
 
 app.get("/api/session", async (req, res) => {

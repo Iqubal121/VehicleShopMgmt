@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from './Sidebar.jsx';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis } from 'recharts';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from './Auth/AuthContext.jsx'; // adjust path if needed
 
 const Dashboard = ({ openEMIDialog }) => {
   const [metrics, setMetrics] = useState(null);
@@ -10,6 +12,9 @@ const Dashboard = ({ openEMIDialog }) => {
   const [recentPayments, setRecentPayments] = useState(null);
   const [duePayments, setDuePayments] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
+  const [showSignupDropdown, setShowSignupDropdown] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleResize = () => {
@@ -47,6 +52,18 @@ const Dashboard = ({ openEMIDialog }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const closeDropdown = (e) => {
+      if (!e.target.closest('.user-menu')) {
+        setShowSignupDropdown(false);
+      }
+    };
+
+    document.addEventListener('click', closeDropdown);
+    return () => document.removeEventListener('click', closeDropdown);
+  }, []);
+
+
   if (!metrics || !monthlyCollection || !loanStatus || !salesByType) {
     return <div>Loading...</div>;
   }
@@ -68,7 +85,38 @@ const Dashboard = ({ openEMIDialog }) => {
             <div className="notification">
               🔔<span className="badge">9</span>
             </div>
-            <div className="user-avatar">IS</div>
+            {/* <div className="user-avatar">IS</div> */}
+            <div className="user-menu">
+              <div
+                className="user-avatar"
+                onClick={() => setShowSignupDropdown(prev => !prev)}
+              >
+                IS
+              </div>
+
+              {showSignupDropdown && (
+                <div className="signup-dropdown">
+                  <Link
+                    to="/signup"
+                    className="signup-link"
+                    onClick={() => setShowSignupDropdown(false)}
+                  >
+                    Sign up
+                  </Link>
+
+                  {/* NEW: Sign out link */}
+                  <button
+                    className="dropdown-item signout-btn"                   
+                    onClick={() => {
+                      logout();                    // Call logout from AuthContext
+                      setShowSignupDropdown(false);
+                      navigate('/login');          // Redirect to login
+                    }}
+                  >                    
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -122,7 +170,7 @@ const Dashboard = ({ openEMIDialog }) => {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip formatter={(value) => `₹${value.toLocaleString('en-IN')}`} contentStyle={{ backgroundColor: '#ffffff', border: 'none', color: 'black', fontWeight: 'bold' }} />
-                  <Bar dataKey="collection" fill="#034295ff" activeBar={{fill: "#082e5c", stroke: "#b6e606ff", strokeWidth: 4, radius: 4 }} />
+                  <Bar dataKey="collection" fill="#034295ff" activeBar={{ fill: "#082e5c", stroke: "#b6e606ff", strokeWidth: 4, radius: 4 }} />
                 </BarChart>
               </ResponsiveContainer>
             )}

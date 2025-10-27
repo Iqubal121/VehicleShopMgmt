@@ -177,8 +177,9 @@ html,
 .metrics {
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
   padding-bottom: 1rem;
+  flex-wrap: wrap;
+  flex-wrap: wrap;
 }
 
 .metric-card {
@@ -1814,4 +1815,95 @@ h1 {
 .emi-cell {
   border: 1px solid black;
   padding: 8px;
+}
+.user-menu {
+  position: relative;          /* needed for absolute dropdown */
+  display: inline-block;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: #034295;
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-user-select: none;   /* Safari 3+ */
+  -ms-user-select: none;       /* IE 10+ / Edge */
+  user-select: none;           /* Standard (Chrome, Firefox, modern Safari) */
+  transition: background 0.2s;
+}
+
+.user-avatar:hover {
+  background: #082e5c;
+}
+
+/* Dropdown block that appears under the avatar */
+.signup-dropdown {
+  position: absolute;
+  top: 100%;                 /* directly below avatar */
+  right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  min-width: 120px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.signup-link {
+  display: block;
+  padding: 10px 16px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.signup-link:hover {
+  background: #f5f5f5;
+}
+
+/* Unified dropdown item style */
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;   
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #333;
+  text-decoration: none;
+}
+
+.dropdown-item:hover {
+  background: #f5f5f5;
+}
+
+/* Sign Out Button – looks like a danger button */
+.signout-btn {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+.signout-btn:hover {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+/* Optional: Add icon */
+.signout-btn::before {
+  content: "Logout";
+  margin-right: 6px;
+  font-size: 1.1em;
 }

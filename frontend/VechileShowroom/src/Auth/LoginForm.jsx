@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,Link } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
 function LoginForm() {
@@ -207,25 +207,22 @@ function LoginForm() {
           )} */}
           {isLogin && (
             <div className="link-group">
-              <a href="/forgot-password" className="link">
+              <Link to="/forgot-password" className="link">
                 Forgot Password?
-              </a>
-              <a href="/reset-password" className="link">
-                Reset Password
-              </a>
+              </Link>
             </div>
           )}
           <button type="submit" className="submit-button">
             {isLogin ? 'Login' : 'Sign Up'}
           </button>
-          <div className="toggle-group">
+          {/* <div className="toggle-group">
             <span>
               {isLogin ? "Don't have an account? " : 'Already have an account? '}
               <button type="button" className="toggle-link" onClick={toggleForm}>
                 {isLogin ? 'Sign Up' : 'Login'}
               </button>
             </span>
-          </div>
+          </div> */}
         </form>
       </div>
     </div>
