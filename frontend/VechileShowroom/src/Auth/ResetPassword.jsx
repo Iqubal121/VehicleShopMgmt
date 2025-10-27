@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function ResetPassword() {
   const [accessToken, setAccessToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState('');
-
+  const navigate = useNavigate();
   // Extract access token from URL hash (e.g. #access_token=...)
   useEffect(() => {
     const hash = window.location.hash.substring(1);
@@ -30,6 +31,7 @@ function ResetPassword() {
 
       const result = await response.json();
       setMessage(result.message || 'Password update response received.');
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setMessage('Error updating password.');
     }
