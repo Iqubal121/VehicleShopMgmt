@@ -202,10 +202,10 @@ app.post("/api/signout", async (req, res) => {
 app.post('/api/forgot-password', async (req, res) => {
   const { email } = req.body;
   try {
-    const {data, error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+    const { data, error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
       redirectTo: 'http://localhost:5173/resetpassword',
     });
-    console.log('Forgot Data: ', {data});
+    //console.log('Forgot Data: ', { data });
     if (error) return res.status(400).json({ message: error.message });
     res.json({ message: 'Reset link sent to your email.' });
   } catch (error) {
@@ -236,7 +236,7 @@ app.post('/api/resetpassword', async (req, res) => {
     res.json({ message: 'Password updated successfully.' });
   } catch (err) {
     console.error('Unexpected error:', err);
-    res.status(500).json({ message: 'Internal server error.'+ err });
+    res.status(500).json({ message: 'Internal server error.' + err });
   }
 
 });
@@ -395,7 +395,7 @@ app.get("/api/dashboard/loan-status", async (req, res) => {
 app.post('/api/sales', async (req, res) => {
   try {
     const formData = req.body;
-    console.log('FormData:', { formData });
+    //console.log('FormData:', { formData });
     // Insert customer
     const customerData = {
       customerId: formData.customerId,
@@ -434,46 +434,47 @@ app.post('/api/sales', async (req, res) => {
       customerId: formData.customerId,
       vehicleId: formData.vehicleNumber,
       saleType: formData.saleType,
-      saleDate: formData.saleDate
+      saleDate: formData.saleDate,
+      salesStatus: formData.salesStatus
     };
 
     // Add sale-type-specific fields
     if (formData.saleType === 'Cash') {
-      saleData.totalAmount = parseFloat(formData.totalAmount);
-      saleData.status = 'Completed';
-      saleData.shopNumber = formData.shopNumber,
-        saleData.paidAmount = parseFloat(formData.paidAmount);
-      saleData.remainingAmount = parseFloat(formData.remainingAmount);
-      saleData.lastpaymentDate = formData.lastpaymentDate;
-      saleData.loanNumber = null;
-      saleData.downPayment = 0;
-      saleData.loanAmount = 0;
-      saleData.tenure = 0;
-      saleData.interestRate = 0;
-      saleData.firstEMIDate = null;
-      saleData.EMIAmount = 0;
-      saleData.emiSchedule = null;
+      saleData.totalAmount = parseFloat(formData.totalAmount),
+        saleData.salesStatus = 'Completed',
+        saleData.shopNumber = formData.shopNumber,
+        saleData.paidAmount = parseFloat(formData.paidAmount),
+        saleData.remainingAmount = parseFloat(formData.remainingAmount),
+        saleData.lastpaymentDate = formData.lastpaymentDate,
+        saleData.loanNumber = null,
+        saleData.downPayment = 0,
+        saleData.loanAmount = 0,
+        saleData.tenure = 0,
+        saleData.interestRate = 0,
+        saleData.firstEMIDate = null,
+        saleData.EMIAmount = 0,
+        saleData.emiSchedule = null
     } else if (formData.saleType === 'Finance') {
-      saleData.totalAmount = parseFloat(formData.totalAmount);
-      saleData.status = 'Active'; // Set status to Active for Finance sales
-      saleData.loanNumber = formData.loanNumber;
-      saleData.downPayment = parseFloat(formData.downPayment);
-      saleData.loanAmount = parseFloat(formData.loanAmount);
-      saleData.tenure = parseInt(formData.tenure);
-      saleData.interestRate = parseFloat(formData.interestRate);
-      saleData.firstEMIDate = formData.firstEMIDate;
-      saleData.EMIAmount = parseFloat(formData.EMIAmount);
-      saleData.emiSchedule = (formData.emiSchedule && Array.isArray(formData.emiSchedule)) ? formData.emiSchedule.map(emi => ({
-        date: emi.date,
-        amount: parseFloat(emi.amount) || 0,
-        status: emi.status || 'Due',
-        emiNo: parseInt(emi.emiNo) || 0,
-        principal: parseFloat(emi.principal) || 0,
-        interest: parseFloat(emi.interest) || 0,
-        balance: parseFloat(emi.balance) || 0,
-        bucket: emi.bucket || '0',
-        overdueCharges: parseFloat(emi.overdueCharges) || 0,
-      })) : null;
+      saleData.totalAmount = parseFloat(formData.totalAmount),
+        saleData.salesStatus = 'Active', // Set status to Active for Finance sales
+        saleData.loanNumber = formData.loanNumber,
+        saleData.downPayment = parseFloat(formData.downPayment),
+        saleData.loanAmount = parseFloat(formData.loanAmount),
+        saleData.tenure = parseInt(formData.tenure),
+        saleData.interestRate = parseFloat(formData.interestRate),
+        saleData.firstEMIDate = formData.firstEMIDate,
+        saleData.EMIAmount = parseFloat(formData.EMIAmount),
+        saleData.emiSchedule = (formData.emiSchedule && Array.isArray(formData.emiSchedule)) ? formData.emiSchedule.map(emi => ({
+          date: emi.date,
+          amount: parseFloat(emi.amount) || 0,
+          status: emi.status || 'Due',
+          emiNo: parseInt(emi.emiNo) || 0,
+          principal: parseFloat(emi.principal) || 0,
+          interest: parseFloat(emi.interest) || 0,
+          balance: parseFloat(emi.balance) || 0,
+          bucket: emi.bucket || '0',
+          overdueCharges: parseFloat(emi.overdueCharges) || 0,
+        })) : null;
 
     }
 
@@ -726,8 +727,8 @@ const generateEmiSchedule = (firstEmiDate, tenure, emiAmount, loanAmount) => {
 // GET /api/sales-details - Fetch customer + vehicle + sale data
 app.get("/api/sales-details", async (req, res) => {
   try {
-    console.log('originalUrl by get:', req.originalUrl);
-    console.log('Query params:', req.query);
+    //console.log('originalUrl by get:', req.originalUrl);
+    //console.log('Query params:', req.query);
 
     const {
       customerId,
@@ -750,7 +751,7 @@ app.get("/api/sales-details", async (req, res) => {
 
     if (error) throw error;
 
-    console.log('Sales details data:', data);
+    //console.log('Sales details data:', data);
     res.json(data);  // Return raw JSON array
   } catch (err) {
     console.error('Error in GET /api/sales-details:', err);
@@ -762,8 +763,8 @@ app.get("/api/sales-details", async (req, res) => {
 app.get("/api/customers", async (req, res) => {
   try {
     const { data, error } = await supabase.from('customers').select('*');
-    console.log('originalUrl by get : ', req.originalUrl);
-    console.log('Customers data by get:', { data });
+    //console.log('originalUrl by get : ', req.originalUrl);
+    //console.log('Customers data by get:', { data });
     if (error) throw error;
     res.json(data);
   } catch (err) {
@@ -775,8 +776,8 @@ app.get("/api/customers", async (req, res) => {
 app.post("/api/customers", async (req, res) => {
   try {
     const { data, error } = await supabase.from('customers').insert([req.body]).select();
-    console.log('originalUrl by post : ', req.originalUrl);
-    console.log('Customers data by post:', { data });
+    //console.log('originalUrl by post : ', req.originalUrl);
+    //console.log('Customers data by post:', { data });
     if (error) throw error;
     res.status(201).json(data[0]);
   } catch (err) {
@@ -787,14 +788,14 @@ app.post("/api/customers", async (req, res) => {
 // GET customer by ID
 app.get("/api/customers/:id", async (req, res) => {
   try {
-    console.log('saleData by id:: ', req.params.id);
+   // console.log('saleData by id:: ', req.params.id);
     // Fetch customer data
     const { data: customer, error: customerError } = await supabase
       .from('customers')
       .select('*')
       .eq('customerId', req.params.id)
       .single();
-    console.log('customerData by id:: ', { customer });
+   // console.log('customerData by id:: ', { customer });
 
     if (customerError) throw customerError;
     if (!customer) {
@@ -807,7 +808,7 @@ app.get("/api/customers/:id", async (req, res) => {
       .select('*')
       .eq('customerId', req.params.id)
       .single();
-    console.log('saleData:: ', { sales });
+    //console.log('saleData:: ', { sales });
 
     if (salesError && salesError.code !== 'PGRST116') {
       // PGRST116 is the error code for "no rows found" in Supabase
@@ -820,7 +821,7 @@ app.get("/api/customers/:id", async (req, res) => {
       .select('*')
       .eq('vehicleNumber', sales.vehicleId)
       .single();
-    console.log('vehiclesData:: ', { vehicle });
+    //console.log('vehiclesData:: ', { vehicle });
 
     if (vehicleError && vehicleError.code !== 'PGRST116') {
       // PGRST116 is the error code for "no rows found" in Supabase
@@ -842,7 +843,7 @@ app.get("/api/customers/:id", async (req, res) => {
       const firstUnpaidEmi = sales.emiSchedule.find(emi => emi.status !== 'Paid');
       nextEmiDate = firstUnpaidEmi?.date || '-';
     }
-    console.log('nextEmiDate : ', nextEmiDate)
+    //console.log('nextEmiDate : ', nextEmiDate)
 
     // Update loanStatus based on EMI statuses
     if (sales && sales.emiSchedule && sales.emiSchedule.length > 0) {
@@ -854,7 +855,7 @@ app.get("/api/customers/:id", async (req, res) => {
         loanStatus = 'Active';
       }
     }
-    console.log('loanStatus : ', loanStatus)
+    //console.log('loanStatus : ', loanStatus)
     // Return EVERYTHING
     const response = {
       customer,
@@ -868,8 +869,8 @@ app.get("/api/customers/:id", async (req, res) => {
         totalPaid,
       },
     };
-    console.log('response saleData:: ', { response });
-    res.json(response);    
+    //console.log('response saleData:: ', { response });
+    res.json(response);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -900,17 +901,17 @@ app.put('/api/customers/:customerId', async (req, res) => {
     saleDate: formData.saleDate,
     totalAmount: parseFloat(formData.totalAmount) || 0,
     shopNumber: formData.shopNumber || null,
-    loanNumber :formData.loanNumber || 0,
-    sanctionAmount:null,
+    loanNumber: formData.loanNumber || 0,
+    sanctionAmount: null,
     paidAmount: parseFloat(formData.paidAmount) || 0,
     remainingAmount: parseFloat(formData.remainingAmount) || 0,
     lastpaymentDate: formData.lastpaymentDate || null,
-    downPayment : parseFloat(formData.downPayment) || 0,
+    downPayment: parseFloat(formData.downPayment) || 0,
     loanAmount: parseFloat(formData.loanAmount) || 0,
     tenure: parseInt(formData.tenure) || 0,
     firstEMIDate: formData.firstEmiDate || null,
-    EMIAmount : parseFloat(formData.emiAmount) || 0,
-    emiSchedule : (formData.emiSchedule && Array.isArray(formData.emiSchedule)) ? formData.emiSchedule.map(emi => ({
+    EMIAmount: parseFloat(formData.emiAmount) || 0,
+    emiSchedule: (formData.emiSchedule && Array.isArray(formData.emiSchedule)) ? formData.emiSchedule.map(emi => ({
       emiNo: parseInt(emi.emiNo) || 0,
       date: emi.date || '',
       amount: parseFloat(emi.amount) || 0,
@@ -921,9 +922,9 @@ app.put('/api/customers/:customerId', async (req, res) => {
       bucket: emi.bucket || '0',
       overdueCharges: parseFloat(emi.overdueCharges) || 0,
     })) : null,
-    loanStatus:null,
-    promisedPaymentDate:null
-  }; 
+    salesStatus: formData.salesStatus,
+    promisedPaymentDate: null
+  };
 
   // Basic validation
   if (!customerId || !reqObj.name || !reqObj.vehicleNumber || !reqObj.saleType) {
@@ -937,7 +938,7 @@ app.put('/api/customers/:customerId', async (req, res) => {
   if (reqObj.shopNumber && (reqObj.shopNumber < 1 || reqObj.shopNumber > 5)) {
     return res.status(400).json({ error: 'Shop Number must be between 1 and 5' });
   }
-  console.log('reqObj :',reqObj.saleType, reqObj.loanNumber, reqObj.loanAmount, reqObj.tenure, reqObj.firstEMIDate, reqObj.EMIAmount);
+  //console.log('reqObj :', reqObj.saleType, reqObj.loanNumber, reqObj.loanAmount, reqObj.tenure, reqObj.firstEMIDate, reqObj.EMIAmount);
   // Additional validation for Finance sale type
   if (reqObj.saleType === 'Finance' && (!reqObj.loanNumber || !reqObj.loanAmount || !reqObj.tenure || !reqObj.firstEMIDate || !reqObj.EMIAmount)) {
     return res.status(400).json({ error: 'Loan Number, Loan Amount, Tenure, First EMI Date, and EMI Amount are required for Finance sales' });
@@ -972,6 +973,7 @@ app.put('/api/customers/:customerId', async (req, res) => {
         p_battery_serial_number: reqObj.batterySerialNumber,
         p_battery_count: parseInt(reqObj.batteryCount) || 1,
         p_sale_type: reqObj.saleType,
+        p_sale_status:reqObj.salesStatus,
         p_shop_number: parseInt(reqObj.shopNumber) || null,
         p_total_amount: parseFloat(reqObj.totalAmount) || 0,
         p_paid_amount: parseFloat(reqObj.paidAmount) || 0,
@@ -998,6 +1000,7 @@ app.put('/api/customers/:customerId', async (req, res) => {
         p_battery_serial_number: reqObj.batterySerialNumber,
         p_battery_count: parseInt(reqObj.batteryCount) || 1,
         p_sale_type: reqObj.saleType,
+        p_sale_status:reqObj.salesStatus,
         p_loan_number: reqObj.loanNumber || null,
         p_total_amount: parseFloat(reqObj.totalAmount) || 0,
         p_paid_amount: parseFloat(reqObj.paidAmount) || 0,
@@ -1042,7 +1045,7 @@ app.get("/api/vehicles", async (req, res) => {
 // POST add new vehicle
 app.post("/api/vehicles", async (req, res) => {
   try {
-    console.log('insert vehicle: ', req.body);
+    //console.log('insert vehicle: ', req.body);
 
     // Validate input data
     const validationErrors = validateVehicleData(req.body);
@@ -1180,7 +1183,7 @@ app.put("/api/vehicles/:vehicleNumber/status", async (req, res) => {
       .update({ vehicleStatus: status })
       .eq('vehicleNumber', req.params.vehicleNumber)
       .select();
-      
+
     if (error) throw error;
     if (data.length === 0) {
       return res.status(404).json({ error: 'Vehicle not found' });
@@ -1271,20 +1274,20 @@ app.get("/api/batteries", async (req, res) => {
 // POST add new battery
 app.post("/api/batteries", async (req, res) => {
   try {
-    console.log('Received battery data:', req.body);
+    //console.log('Received battery data:', req.body);
 
     const newBattery = {
       ...mapBatteryToDatabase(req.body),
       status: req.body.status || 'In Stock'
     };
 
-    console.log('Battery to insert:', newBattery);
+    //console.log('Battery to insert:', newBattery);
     const { data, error } = await supabase.from('batteries').insert([newBattery]).select();
     if (error) {
       console.error('Supabase error:', error);
       throw error;
     }
-    console.log('Battery inserted successfully:', data);
+    //console.log('Battery inserted successfully:', data);
     const mappedData = mapBatteryToCamelCase(data[0]);
     res.status(201).json(mappedData);
   } catch (err) {

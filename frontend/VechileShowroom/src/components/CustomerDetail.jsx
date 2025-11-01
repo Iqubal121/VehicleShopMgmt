@@ -48,7 +48,7 @@ const CustomerDetail = () => {
     emiAmount: '',
     interestRate: '',
     emiSchedule: [],
-    loanStatus: '',
+    salesStatus: '',
     nextEmiDate: '',
     promisedPaymentDate: '',
   });
@@ -68,7 +68,7 @@ const CustomerDetail = () => {
         throw new Error('Failed to fetch customer data');
       }
       const data = await response.json();    
-
+      console.log('Data customer :', data);
       setCustomer({
         customerId: data.customer?.customerId || '',
         date: data.customer?.date || '',
@@ -107,7 +107,7 @@ const CustomerDetail = () => {
         emiAmount: data.sales?.EMIAmount ? data.sales.EMIAmount.toString() : '',
         interestRate:data.sales?.interestRate? data.sales.interestRate.toString():'',
         emiSchedule: data.sales?.emiSchedule && Array.isArray(data.sales.emiSchedule) ? updateBuckets(data.sales.emiSchedule) : [],
-        loanStatus: data.summary?.loanStatus || '',
+        salesStatus: data.summary?.loanStatus || '',
         nextEmiDate: data.summary?.nextEmiDate || '',
         promisedPaymentDate: '', // Not in API response; set to empty or fetch from elsewhere
       });
@@ -125,6 +125,7 @@ const CustomerDetail = () => {
   useEffect(() => {
     //fetch from backend using ID from URL
     if (id) {
+      //console.log('useeffect fetch customer: ', id)
       fetchCustomerData(id);
     } else if (customerFromState) { // If customer data is passed from state (from Customer.jsx), use it
       console.log('customerFromState :: ', { customerFromState });
@@ -556,7 +557,7 @@ const CustomerDetail = () => {
             </label>
             <label>
               Loan Status:
-              <select name="loanStatus" value={customer.loanStatus} onChange={handleChange}>
+              <select name="salesStatus" value={customer.salesStatus} onChange={handleChange}>
                 <option value="">Select Status</option>
                 <option value="Active">Active</option>
                 <option value="Closed">Closed</option>
@@ -647,7 +648,7 @@ const CustomerDetail = () => {
             </label>
             <label>
               Payment Status:
-              <select name="loanStatus" value={customer.loanStatus} onChange={handleChange}>
+              <select name="salesStatus" value={customer.salesStatus} onChange={handleChange}>
                 <option value="">Select Status</option>
                 <option value="Completed">Completed</option>
                 <option value="Partial">Partial</option>
