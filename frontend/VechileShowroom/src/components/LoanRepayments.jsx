@@ -130,7 +130,8 @@ const LoanRepayments = () => {
   }).length;
 
   const handleRowClick = (customer) => {
-    navigate(`/customers/${customer.id}`, { state: { customer, from: 'sales-finance' } });
+    console.log('Handlerroclick : ', customer);
+    navigate(`/customers/${customer.customerId}`, { state: { customer, from: 'sales-finance' } });
   };
 
   const generateReportHTML = (customers) => {
